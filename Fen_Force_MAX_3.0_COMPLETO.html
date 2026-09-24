@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#8ed4aa">
+<meta name="description" content="Fen Force - Plataforma educativa, clima, mapa mundial, preparación y juego de supervivencia">
+<title>Fen Force | Prevención, Clima y Supervivencia</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{
+  --green:#86d5aa;
+  --green-dark:#2f8756;
+  --green-deep:#246943;
+  --green-soft:#eaf8ef;
+  --mint:#d9f3e4;
+  --mint-2:#c4ecd4;
+  --white:#fff;
+  --bg:#f5fbf7;
+  --text:#1d3327;
+  --soft:#668071;
+  --line:#d9e9df;
+  --blue:#72bfe5;
+  --blue-soft:#e5f5fc;
+  --orange:#f3bb69;
+  --orange-soft:#fff0d0;
+  --red:#df7777;
+  --red-soft:#ffeded;
+  --purple:#a895dc;
+  --shadow:0 14px 38px rgba(41,89,59,.10);
+  --radius:20px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:radial-gradient(circle at 5% 0%,rgba(134,213,170,.18),transparent 25%),linear-gradient(#fff,#f4faf7);color:var(--text);font-family:Inter,Arial,Helvetica,sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 15% 20%,rgba(134,213,170,.35),transparent 28%),radial-gradient(circle at 85% 80%,rgba(114,191,229,.16),transparent 25%),#f4fbf7}
+.login-card{width:min(470px,100%);background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:28px;padding:34px;box-shadow:0 35px 90px rgba(35,85,54,.16)}
+.brand{display:flex;align-items:center;gap:11px}
+.brand-icon{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(135deg,var(--green),#b2e8c7);color:#fff;font-weight:900;box-shadow:0 8px 20px rgba(83,164,109,.22)}
+.brand-name{font-size:23px;font-weight:900;letter-spacing:1px}.brand-name span{color:var(--green-dark)}
+.login-title{font-size:31px;margin:28px 0 7px}.login-sub{color:var(--soft);line-height:1.6}
+
+/* HEADER */
+header{position:sticky;top:0;z-index:1000;background:rgba(255,255,255,.95);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:11px 22px;display:flex;justify-content:space-between;align-items:center;gap:15px}
+.header-right{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:8px 12px;border:1px solid var(--line);border-radius:99px;background:var(--green-soft);color:var(--green-dark);font-size:12px;font-weight:800}
+
+/* LAYOUT */
+.layout{min-height:calc(100vh - 70px);display:flex}.sidebar{width:248px;flex-shrink:0;background:#fbfefc;border-right:1px solid var(--line);padding:18px 12px}
+.nav-btn{width:100%;display:flex;align-items:center;gap:11px;border:1px solid transparent;background:transparent;color:#587264;padding:13px 14px;border-radius:14px;margin:4px 0;text-align:left;font-weight:750;transition:.2s}
+.nav-btn:hover{background:var(--green-soft);color:var(--green-dark);transform:translateX(2px)}
+.nav-btn.active{background:linear-gradient(90deg,#e3f6ea,#f6fbf8);border-color:#c6ead3;color:#26653f;box-shadow:inset 3px 0 var(--green-dark)}
+main{width:100%;max-width:1650px;margin:0 auto;padding:25px;min-width:0}.page{display:none;animation:pageIn .22s ease}.page.active{display:block}@keyframes pageIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* GENERAL */
+h1{margin:0 0 8px;font-size:clamp(28px,4vw,42px)}h2{margin:0 0 13px}h3{margin:0 0 9px}p{line-height:1.58}.muted{color:var(--soft)}.small{font-size:12px;color:#779187}
+.card{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:17px;margin:18px 0}.col-3{grid-column:span 3}.col-4{grid-column:span 4}.col-5{grid-column:span 5}.col-6{grid-column:span 6}.col-7{grid-column:span 7}.col-8{grid-column:span 8}.col-12{grid-column:span 12}
+.btn{border:0;border-radius:12px;padding:11px 16px;font-weight:850;background:linear-gradient(135deg,#86d5aa,#67c893);color:#143e25;box-shadow:0 7px 17px rgba(73,155,100,.14);transition:.18s}.btn:hover{filter:brightness(1.03);transform:translateY(-2px)}.btn.secondary{background:#fff;border:1px solid var(--line);color:#466455;box-shadow:none}.btn.blue{background:#ccecfb;color:#245f79}.btn.orange{background:#ffe3af;color:#774d11}.btn.red{background:#ffd4d4;color:#833a3a}.btn.small-btn{padding:8px 11px;font-size:12px}.btn-row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+input,select,textarea{width:100%;background:#fff;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px;outline:none;margin:6px 0 12px}input:focus,select:focus,textarea:focus{border-color:#79c99a;box-shadow:0 0 0 4px rgba(134,213,170,.13)}label{font-size:13px;color:#567364;font-weight:700}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border-radius:9px;font-size:11px;font-weight:900;letter-spacing:.4px;background:var(--green-soft);color:var(--green-dark)}
+.stat{font-size:31px;font-weight:900;color:#214b32;margin:7px 0}.progress{height:9px;background:#edf3ef;border-radius:99px;overflow:hidden}.progress>div{height:100%;width:0;background:linear-gradient(90deg,#8bd9ac,#52ae79);transition:.25s}
+.hero{position:relative;overflow:hidden;border-radius:28px;padding:35px;background:radial-gradient(circle at 85% 22%,rgba(255,255,255,.7),transparent 20%),linear-gradient(125deg,#dff5e7,#edf9f1 55%,#dff4fb);border:1px solid #c8e8d4;box-shadow:var(--shadow)}.hero h1{max-width:760px}.hero p{max-width:780px;color:#557367}.hero-ring{position:absolute;right:-25px;bottom:-70px;width:270px;height:270px;border-radius:50%;border:42px solid rgba(134,213,170,.22)}
+.game-help{border:1px solid var(--line);border-radius:15px;padding:13px;background:linear-gradient(135deg,#f1faf4,#f1f8fb)}
+
+/* WEATHER */
+.weather-main{display:flex;align-items:center;gap:20px}.weather-icon{width:92px;height:92px;border-radius:24px;display:grid;place-items:center;font-size:44px;background:linear-gradient(145deg,#effbf3,#d7f1e1)}.weather-big{font-size:49px;font-weight:900}
+
+/* MAP */
+#map{height:570px;width:100%;max-width:100%;border-radius:17px;overflow:hidden;margin-top:14px;border:1px solid var(--line);background:#eaf4ef;isolation:isolate} .leaflet-container{font:13px Inter,Arial,sans-serif;background:#eaf4ef} .leaflet-popup-content{line-height:1.5;max-width:240px}.map-toolbar{display:flex;gap:8px;flex-wrap:wrap}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#688174;margin-top:11px}.legend span{display:flex;align-items:center;gap:6px}.dot{width:11px;height:11px;border-radius:50%;display:inline-block}.map-info{padding:12px;border-radius:14px;background:#f4faf7;border:1px solid var(--line);margin-top:12px}
+.map-explorer{margin-top:14px;padding:13px;border:1px solid #dceee3;border-radius:16px;background:linear-gradient(135deg,#f8fcf9,#eef8f2)}.map-search-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.map-search-row input{flex:1;min-width:190px;margin:0}.map-search-row select{width:auto;min-width:210px;flex:1;margin:0}.map-search-row label{white-space:nowrap}.map-options-row{margin-top:9px}.map-shortcuts{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.map-shortcut{border:1px solid #cfe6d7;background:#fff;color:#356347;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800;cursor:pointer}.map-shortcut:hover{background:#dff4e6}.leaflet-container{outline:0}.leaflet-control-layers,.leaflet-bar{border:1px solid #d5e5db!important;box-shadow:0 5px 18px #244c351c!important}.leaflet-popup-content-wrapper{border-radius:12px}.leaflet-popup-content b{color:#286b46}.leaflet-control-attribution{font-size:10px!important}@media(max-width:650px){.map-search-row>*{width:100%!important}.map-search-row input,.map-search-row select{min-width:0}.map-options-row label{width:100%}#map{height:430px}}
+.enso-title{font-size:13px;font-weight:900;color:#4a6b58}.enso-value{font-size:25px;font-weight:900;margin-top:2px}
+
+/* CHECKLIST */
+.list-item{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid #edf2ef}.list-item:last-child{border-bottom:0}.list-item input{width:auto;margin:0;accent-color:#58b17c}
+
+/* CHAT */
+.chat-box{height:340px;overflow:auto;padding:13px;background:#f5faf7;border:1px solid var(--line);border-radius:15px}.chat-msg{max-width:89%;padding:11px 13px;margin:8px 0;border-radius:14px;line-height:1.5}.chat-msg.bot{background:#e8f7ed;border:1px solid #d4efdd}.chat-msg.user{margin-left:auto;background:#dff0f8;color:#2f596d}.chat-suggest{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+/* QUIZ */
+.quiz-option{width:100%;text-align:left;border:1px solid var(--line);background:#fff;color:#395d47;padding:13px;border-radius:13px;margin:7px 0;transition:.18s}.quiz-option:hover{background:var(--green-soft)}.quiz-option.correct{border-color:#71c895;background:#e4f8ea}.quiz-option.wrong{border-color:#ef9999;background:#fff0f0}
+
+/* GAME */
+.game-shell{padding:18px;background:radial-gradient(circle at 10% 10%,rgba(134,213,170,.12),transparent 27%),#fff}.game-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}.game-stats{display:flex;gap:8px;flex-wrap:wrap}.game-stat{border:1px solid var(--line);background:#fbfefc;border-radius:12px;padding:8px 11px;font-size:13px;font-weight:850}.game-message{margin-top:10px;padding:10px 13px;border-radius:12px;background:#edf8f1;border:1px solid #d8eee0;color:#326545;font-size:13px;font-weight:800}
+#gameCanvas{width:100%;max-width:100%;height:auto;display:block;touch-action:pan-y;background:#ccefdc;border:1px solid #bcdaca;border-radius:18px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3),0 16px 42px rgba(42,91,57,.12)}.game-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.game-touch{display:none;gap:8px;flex-wrap:wrap;margin-top:9px}.touch-btn{flex:1;min-width:70px;border:1px solid #cde1d4;background:#f8fcfa;color:#315340;border-radius:13px;padding:12px;font-weight:900;user-select:none}
+.character-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.character-card{border:2px solid #e1ece5;background:#fff;padding:11px;border-radius:15px;cursor:pointer;text-align:center;transition:.2s}.character-card:hover{transform:translateY(-2px)}.character-card.selected{border-color:#79ca99;background:#edf9f1;box-shadow:0 9px 21px rgba(65,145,90,.10)}.character-avatar{width:58px;height:58px;margin:auto auto 8px;display:grid;place-items:center;border-radius:50%;background:#eef8f2;font-size:32px}.ability{padding:9px 10px;border-radius:10px;background:#f5faf7;color:#6c8376;font-size:11px;line-height:1.35;margin-top:7px}
+.level-roadmap{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:11px}.level-node{padding:9px 3px;border-radius:10px;text-align:center;font-size:11px;font-weight:900;border:1px solid var(--line);background:#fbfefc;color:#7d9386}.level-node.current{background:#dcf6e6;border-color:#8fd3aa;color:#286940}.level-node.done{background:#edf9f1;color:#4e9367}.boss-panel{display:none;margin-top:10px;padding:11px;border-radius:14px;background:#fff1f1;border:1px solid #f0c4c4}.boss-panel.show{display:block}.boss-title{font-weight:900;color:#984747}.boss-progress{height:10px;background:#f2dddd;border-radius:99px;overflow:hidden;margin-top:7px}.boss-progress div{height:100%;width:100%;background:#dd7171}
+
+/* FOOTER / TOAST */
+footer{text-align:center;padding:32px 10px;font-size:12px;color:#80998c}#toast{position:fixed;right:18px;bottom:18px;z-index:8000;display:none;max-width:340px;padding:13px 16px;border-radius:13px;background:#245c3a;color:#fff;box-shadow:0 16px 38px rgba(0,0,0,.18)}
+
+@media(max-width:1050px){.sidebar{width:74px;padding:10px 6px}.nav-btn{justify-content:center;font-size:0}.nav-btn .icon{font-size:20px}.col-3,.col-4,.col-5,.col-6,.col-7,.col-8{grid-column:span 6}}
+@media(max-width:720px){header{padding:10px 12px}.layout{display:block}.sidebar{position:sticky;top:64px;z-index:900;width:100%;display:flex;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:6px}.nav-btn{min-width:48px;width:auto;margin:0 3px}.main{padding:13px}main{padding:13px}.col-3,.col-4,.col-5,.col-6,.col-7,.col-8{grid-column:span 12}.hero{padding:24px}.game-touch{display:flex}#map{height:420px}.level-roadmap{grid-template-columns:repeat(5,1fr)}}
+@media(max-width:460px){.level-roadmap{grid-template-columns:repeat(4,1fr)}.character-grid{grid-template-columns:1fr 1fr}.login-card{padding:23px}.weather-main{align-items:flex-start;flex-direction:column}}
+
+/* ===== EL NIÑO ENHANCED UI ===== */
+.dashboard-rail{display:grid;grid-template-columns:1.4fr .8fr .8fr .8fr;gap:12px;margin:18px 0}.dash-card{position:relative;overflow:hidden;min-height:128px;padding:18px;border:1px solid #d8ebe0;border-radius:18px;background:linear-gradient(145deg,#ffffff,#f5fbf7);box-shadow:0 12px 30px rgba(41,89,59,.08)}.dash-card .dash-icon{font-size:28px}.dash-label{font-size:11px;font-weight:900;letter-spacing:.5px;color:#6d8679;text-transform:uppercase}.dash-value{font-size:27px;font-weight:900;margin-top:4px;color:#245d3e}.dash-note{font-size:12px;color:#779187;margin-top:5px;line-height:1.4}.dash-card.alert{background:linear-gradient(145deg,#fff8e9,#ffffff)}.dash-card.alert::after{content:"";position:absolute;width:90px;height:90px;right:-25px;top:-25px;border-radius:50%;background:rgba(243,187,105,.16)}.quick-panel{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}.quick-chip{border:1px solid #cfe6d7;background:#fff;color:#356347;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:850;transition:.18s}.quick-chip:hover{background:#e4f7ea;transform:translateY(-1px)}.status-line{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-top:7px}.status-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#5cc584;box-shadow:0 0 0 4px rgba(92,197,132,.14);margin-right:7px}.mini-meter{height:7px;background:#eaf0ec;border-radius:99px;overflow:hidden}.mini-meter>div{height:100%;width:0;background:linear-gradient(90deg,#8bd9ac,#52ae79);transition:.3s}.forecast-wrap{margin-top:16px}.forecast-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}.forecast-card{padding:14px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#fbfefc,#f2faf5)}.forecast-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}.forecast-list{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.forecast-item{padding:10px;border-radius:13px;background:#fff;border:1px solid #e5eee8;text-align:center}.forecast-time{font-size:11px;font-weight:900;color:#597463}.forecast-temp{font-size:19px;font-weight:900;margin:3px 0}.forecast-rain{font-size:10px;color:#6f8a7b}.daily-list{display:grid;gap:8px}.daily-item{display:grid;grid-template-columns:72px 1fr auto;gap:10px;align-items:center;padding:9px 10px;background:#fff;border:1px solid #e5eee8;border-radius:12px}.daily-day{font-size:12px;font-weight:900}.daily-weather{font-size:12px;color:#617b6e}.temp-range{font-weight:900}.risk-note{margin-top:8px;padding:10px 12px;border-radius:12px;background:#fff7e7;border:1px solid #f4dfb3;color:#7a5b21;font-size:12px}.map-risk-chip{background:#fff1d5!important;color:#835d1e!important;border-color:#f0d69e!important}.game-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.game-badge{border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.1);padding:6px 9px;border-radius:999px;color:#fff;font-size:11px;font-weight:800}.game-weather{pointer-events:none;position:relative}.game-tip{font-size:12px;color:#708679;background:#f4faf7;border:1px solid var(--line);padding:10px 12px;border-radius:12px;margin-top:10px}.home-spotlight{display:grid;grid-template-columns:1.45fr .55fr;gap:14px}.spotlight-main{padding:18px;border-radius:20px;background:linear-gradient(135deg,#e5f7eb,#eef9f4 55%,#e6f4fb);border:1px solid #cfe9d8}.spotlight-side{padding:18px;border-radius:20px;background:#fff;border:1px solid var(--line)}
+@media(max-width:1080px){.dashboard-rail{grid-template-columns:repeat(2,minmax(0,1fr))}.forecast-grid,.home-spotlight{grid-template-columns:1fr}.forecast-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.dashboard-rail{grid-template-columns:1fr}.forecast-list{grid-template-columns:repeat(2,minmax(0,1fr))}.daily-item{grid-template-columns:64px 1fr}.temp-range{grid-column:2}}
+.disaster-alert{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;padding:11px 13px;border-radius:13px;border:1px solid #f0d69e;background:linear-gradient(135deg,#fff8e8,#fffdf8);color:#6e511b;font-size:12px;font-weight:850}.disaster-alert .disaster-name{font-size:14px;color:#7a4b12}.disaster-meter{height:7px;background:#f4ead4;border-radius:99px;overflow:hidden;min-width:130px;flex:1}.disaster-meter>div{height:100%;background:linear-gradient(90deg,#f1bd68,#db6b59);width:0%;transition:.2s}
+
+.sidebar .nav-btn .icon{width:23px;text-align:center}.nav-btn.active .icon{transform:scale(1.08)}
+
+
+/* ===== FEN FORCE 2.0 — ENHANCED SYSTEMS ===== */
+.ff-glow{box-shadow:0 0 0 1px #cfe8d8,0 14px 40px rgba(41,89,59,.10),0 0 35px rgba(126,213,164,.12)}
+.ff-progress-big{height:12px;background:#eaf1ed;border-radius:99px;overflow:hidden}.ff-progress-big>div{height:100%;width:0;background:linear-gradient(90deg,#77cf9a,#4b9e70);transition:.35s}
+.ff-kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:14px}.ff-kpi{padding:15px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,#fff,#f4fbf7);min-height:118px}.ff-kpi .kpi-icon{font-size:26px}.ff-kpi .kpi-value{font-size:26px;font-weight:900;margin-top:3px;color:#245d3e}.ff-kpi .kpi-label{font-size:11px;font-weight:900;text-transform:uppercase;color:#71877a;letter-spacing:.5px}
+.ff-badge-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.ff-badge-card{padding:12px;border:1px solid var(--line);border-radius:15px;background:#fff}.ff-badge-card.locked{opacity:.47;filter:grayscale(.35)}.ff-badge-icon{font-size:28px}.ff-badge-title{font-weight:900;margin-top:5px}.ff-badge-desc{font-size:11px;color:#71877a;line-height:1.45;margin-top:3px}
+.ff-setting{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid #edf2ef}.ff-setting:last-child{border-bottom:0}.ff-switch{position:relative;width:48px;height:28px;flex:0 0 auto}.ff-switch input{opacity:0;width:0;height:0}.ff-slider{position:absolute;inset:0;border-radius:99px;background:#dce8e0;transition:.2s;cursor:pointer}.ff-slider:before{content:"";position:absolute;width:20px;height:20px;left:4px;top:4px;background:#fff;border-radius:50%;box-shadow:0 2px 7px rgba(0,0,0,.14);transition:.2s}.ff-switch input:checked + .ff-slider{background:#67c58e}.ff-switch input:checked + .ff-slider:before{transform:translateX(20px)}
+.ff-sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ff-sim-card{padding:16px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(145deg,#fbfefc,#eff8f3)}.ff-sim-option{display:block;width:100%;text-align:left;padding:11px 12px;margin-top:8px;border:1px solid var(--line);border-radius:12px;background:#fff;color:#315340;font-weight:800}.ff-sim-option:hover{background:#e8f6ed}.ff-sim-result{margin-top:10px;padding:11px 12px;border-radius:12px;border:1px solid #dcebe2;background:#fff;font-size:13px}
+.ff-game-extra{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.ff-game-extra .game-stat{background:linear-gradient(145deg,#fff,#f4faf6)}
+.ff-game-banner{margin-top:10px;padding:12px 13px;border-radius:14px;background:linear-gradient(135deg,#163e28,#2e7049);color:#fff;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}.ff-game-banner small{opacity:.84}.ff-game-breath{height:7px;background:rgba(255,255,255,.18);border-radius:99px;overflow:hidden;min-width:150px;flex:1}.ff-game-breath>div{height:100%;width:100%;background:#9fe8ba;transition:.2s}
+.ff-tip{padding:12px 13px;border-radius:13px;background:#f2f9f5;border:1px solid #d8ebdf;color:#4e6c5b;font-size:12px}.ff-hot{animation:ffPulse 1.2s infinite}.ff-shake{animation:ffShake .28s linear 1}@keyframes ffPulse{50%{transform:scale(1.02);box-shadow:0 0 0 5px rgba(103,197,142,.10)}}@keyframes ffShake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.ff-bottom-nav{display:none}
+body.ff-dark{--bg:#0f1713;--text:#e7f4eb;--soft:#9db4a6;--line:#294338;background:radial-gradient(circle at 10% 0%,rgba(70,149,100,.12),transparent 25%),#0f1713}body.ff-dark header,body.ff-dark .sidebar,body.ff-dark .card,body.ff-dark .dash-card,body.ff-dark .spotlight-side,body.ff-dark .forecast-card,body.ff-dark .forecast-item,body.ff-dark .daily-item,body.ff-dark .ff-kpi,body.ff-dark .ff-badge-card,body.ff-dark .ff-sim-card,body.ff-dark .ff-sim-result,body.ff-dark input,body.ff-dark select,body.ff-dark textarea{background:#142019;color:var(--text);border-color:#294338}body.ff-dark .nav-btn{color:#afc6b7}body.ff-dark .hero{background:linear-gradient(125deg,#1d3b29,#173029)}body.ff-dark .game-stat{background:#16241d;color:#e8f5ec}body.ff-dark .btn.secondary{background:#142019;color:#b5cabc;border-color:#294338}body.ff-dark .ff-tip{background:#16251d;border-color:#294338;color:#b8cbbb}
+@media(max-width:900px){.ff-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ff-badge-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ff-game-extra{grid-template-columns:repeat(2,1fr)}.ff-sim-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.ff-bottom-nav{position:sticky;bottom:0;z-index:950;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:7px;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-top:1px solid var(--line)}.ff-bottom-nav button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:8px 4px;font-size:10px;font-weight:900;color:#4c6d5b}.ff-bottom-nav button span{display:block;font-size:17px}.ff-kpi-grid{grid-template-columns:1fr 1fr}.ff-badge-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="brand"><div class="brand-icon">FF</div><div class="brand-name">FEN <span>FORCE</span></div></div>
+    <h1 class="login-title">Bienvenido</h1>
+    <p class="login-sub">Aprende, consulta información, prepara tu mochila y entrena en Fen Force: Misión Refugio.</p>
+    <label for="loginUser">Usuario o correo</label>
+    <input id="loginUser" autocomplete="username" placeholder="Escribe tu usuario">
+    <label for="loginPass">Contraseña</label>
+    <input id="loginPass" type="password" autocomplete="current-password" placeholder="Escribe tu contraseña">
+    <button class="btn" style="width:100%;margin-top:4px" onclick="login()">Entrar a Fen Force</button>
+    <p class="small" style="margin-top:15px">Modo demostración para proyecto educativo. No es una autenticación real.</p>
+  </div>
+</div>
+
+<header>
+  <div class="brand"><div class="brand-icon" style="width:40px;height:40px">FF</div><div class="brand-name" style="font-size:20px">FEN <span>FORCE</span></div></div>
+  <div class="header-right"><span class="pill">● SISTEMA ACTIVO</span><span class="pill" id="userBadge">Invitado</span><button class="btn secondary small-btn" onclick="logout()">Salir</button></div>
+</header>
+
+<div class="layout">
+<aside class="sidebar">
+  <button class="nav-btn active" onclick="showPage('home',this)"><span class="icon">🏠</span><span>Inicio</span></button>
+  <button class="nav-btn" onclick="showPage('clima',this)"><span class="icon">🌦️</span><span>Clima</span></button>
+  <button class="nav-btn" onclick="showPage('mapa',this)"><span class="icon">🗺️</span><span>Mapa</span></button>
+  <button class="nav-btn" onclick="showPage('educacion',this)"><span class="icon">📚</span><span>Aprender</span></button>
+  <button class="nav-btn" onclick="showPage('checklist',this)"><span class="icon">🎒</span><span>Mochila</span></button>
+  <button class="nav-btn" onclick="showPage('quiz',this)"><span class="icon">🧠</span><span>Quiz</span></button>
+  <button class="nav-btn" onclick="showPage('asistente',this)"><span class="icon">🤖</span><span>Asistente</span></button>
+  <button class="nav-btn" onclick="showPage('juego',this)"><span class="icon">🎮</span><span>Juego</span></button>
+  <button class="nav-btn" onclick="showPage('progreso',this)"><span class="icon">🏆</span><span>Progreso</span></button>
+  <button class="nav-btn" onclick="showPage('ajustes',this)"><span class="icon">⚙️</span><span>Ajustes</span></button>
+</aside>
+
+<main>
+
+<!-- HOME -->
+<section id="home" class="page active">
+  <div class="hero">
+    <div class="hero-ring"></div>
+    <span class="tag">CENTRO DE PREVENCIÓN, CLIMA Y SUPERVIVENCIA</span>
+    <h1>Aprende a prepararte. Entrena para responder.</h1>
+    <p>Fen Force combina educación, clima actual, mapa mundial de impactos, preparación familiar, cuestionarios, asistente y un juego de supervivencia con 20 niveles y jefe final.</p>
+    <div class="btn-row"><button class="btn" onclick="showPage('educacion')">📚 Comenzar</button><button class="btn secondary" onclick="showPage('juego')">🎮 Misión Refugio</button></div>
+    <div class="status-line"><span class="small"><span class="status-dot"></span>Panel operativo · información educativa</span><span class="small" id="dashboardTimestamp">Actualizado al abrir la app</span></div>
+  </div>
+
+  <div class="dashboard-rail">
+    <div class="dash-card"><div class="dash-icon">🎒</div><div class="dash-label">Preparación</div><div class="dash-value" id="dashReady">0%</div><div class="mini-meter"><div id="dashReadyBar"></div></div><div class="dash-note">Progreso de la mochila de emergencia.</div></div>
+    <div class="dash-card"><div class="dash-icon">🌦️</div><div class="dash-label">Clima</div><div class="dash-value" id="dashWeather">--°C</div><div class="dash-note" id="dashWeatherNote">Selecciona una ciudad.</div></div>
+    <div class="dash-card"><div class="dash-icon">🧠</div><div class="dash-label">Aprendizaje</div><div class="dash-value" id="dashQuiz">Sin intento</div><div class="dash-note">Tu resultado se guarda por usuario.</div></div>
+    <div class="dash-card alert"><div class="dash-icon">⚠️</div><div class="dash-label">Avisos</div><div class="dash-value" style="font-size:20px">Verifica fuentes</div><div class="dash-note">Consulta autoridades oficiales para alertas y evacuaciones.</div></div>
+  </div>
+
+  <div class="ff-command-center" aria-label="Centro de operaciones">
+    <div class="ff-command-main">
+      <span class="tag">⚡ CENTRO DE OPERACIONES</span>
+      <h2 style="margin-top:10px">Tu misión de hoy</h2>
+      <p class="muted">Todo tu progreso se conecta: aprende, prepárate y luego ponlo a prueba en Misión Refugio.</p>
+      <div class="ff-command-progress"><div id="ffGlobalProgressBar"></div></div>
+      <div class="status-line"><span class="small">Progreso global</span><b id="ffGlobalProgressText">0%</b></div>
+      <div class="ff-command-actions">
+        <button class="btn" onclick="showPage('juego')">🎮 Continuar misión</button>
+        <button class="btn secondary" onclick="showPage('progreso')">🏆 Ver progreso</button>
+        <button class="btn secondary" onclick="showPage('ajustes')">⚙️ Configurar</button>
+      </div>
+    </div>
+    <div class="ff-command-side">
+      <div class="ff-command-level"><span class="small">NIVEL</span><strong id="ffHomeLevel">1</strong></div>
+      <div class="ff-command-stat"><span>⭐ XP</span><b id="ffHomeXP">0 XP</b></div>
+      <div class="ff-command-stat"><span>🎮 Misión</span><b id="ffHomeGameLevel">1/20</b></div><div class="ff-command-stat"><span>⭐ Puntos</span><b id="ffHomeGamePoints">0 puntos</b></div>
+      <div class="ff-command-stat"><span>🎒 Preparación</span><b id="ffHomeReady2">0%</b></div>
+      <div class="ff-command-stat"><span>🏆 Logros</span><b id="ffHomeAchievements">0/8</b></div>
+      <div class="small" id="ffHomeNext">100 XP para el siguiente nivel</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:18px">
+    <div class="status-line"><div><span class="tag">ACCESOS RÁPIDOS</span><h2 style="margin-top:10px;margin-bottom:4px">Todo lo importante, a un clic</h2><div class="small">Navega directamente a las herramientas principales.</div></div><div class="pill">FEN FORCE · EDUCATIVO</div></div>
+    <div class="quick-panel">
+      <button class="quick-chip" onclick="showPage('clima')">🌦️ Consultar clima</button>
+      <button class="quick-chip" onclick="showPage('mapa')">🗺️ Explorar mapa</button>
+      <button class="quick-chip" onclick="showPage('checklist')">🎒 Revisar mochila</button>
+      <button class="quick-chip" onclick="showPage('quiz')">🧠 Hacer quiz</button>
+      <button class="quick-chip" onclick="showPage('asistente')">🤖 Preguntar al asistente</button>
+      <button class="quick-chip" onclick="showPage('juego')">🎮 Jugar Misión Refugio</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card col-3"><span class="tag">CLIMA</span><div class="stat">🌦️</div><h3>Condiciones actuales</h3><p class="muted">Consulta temperatura, viento, humedad y precipitación.</p><button class="btn secondary" onclick="showPage('clima')">Consultar</button></div>
+    <div class="card col-3"><span class="tag">MAPA MUNDIAL</span><div class="stat">🌎</div><h3>El Niño por regiones</h3><p class="muted">Explora países afectados y regiones de vigilancia del océano Pacífico.</p><button class="btn secondary" onclick="showPage('mapa')">Abrir mapa</button></div>
+    <div class="card col-3"><span class="tag">PREVENCIÓN</span><div class="stat">🎒</div><h3>Mochila de emergencia</h3><p class="muted">Comprueba qué suministros ya tienes preparados.</p><button class="btn secondary" onclick="showPage('checklist')">Revisar</button></div>
+    <div class="card col-3"><span class="tag">VIDEOJUEGO</span><div class="stat">🎮</div><h3>20 niveles</h3><p class="muted">Suministros, obstáculos, enemigos y jefe final.</p><button class="btn secondary" onclick="showPage('juego')">Jugar</button></div>
+  </div>
+
+  <div class="home-spotlight">
+    <div class="spotlight-main"><span class="tag">¿QUÉ ES EL NIÑO?</span><h2 style="margin-top:11px">Un fenómeno que puede alterar el clima en distintas regiones.</h2><p class="muted">El Fenómeno El Niño está asociado al calentamiento anómalo de las aguas superficiales del Pacífico ecuatorial. Puede modificar patrones de lluvia y temperatura.</p><p class="muted">Sus impactos cambian según la región y la estación. En algunas zonas del Perú pueden aumentar los riesgos de lluvias intensas, inundaciones y huaicos.</p><div class="btn-row"><button class="btn secondary" onclick="showPage('educacion')">Aprender prevención</button><button class="btn secondary" onclick="showPage('mapa')">Explorar el océano</button></div></div>
+    <div class="spotlight-side"><span class="tag">TU PROGRESO</span><h3 style="margin-top:13px">Mochila</h3><div class="progress"><div id="homeProgress"></div></div><p class="small" id="homeProgressText">0% completado</p><p class="small" id="homeQuizText">Quiz: todavía no realizado</p><p class="small" id="homeGameText">Juego: nivel 1/20</p><div class="risk-note">💡 El progreso se guarda automáticamente en este navegador por cada usuario de demostración.</div></div>
+  </div>
+
+  <div class="card" style="margin-top:18px"><div class="btn-row" style="justify-content:space-between"><div><span class="tag">ACTUALIZACIÓN ENSO</span><h2 style="margin-top:10px">Estado oceánico</h2><p class="muted" style="margin-bottom:0">El panel del mapa incluye las cuatro regiones Niño y los valores publicados por NOAA para agosto de 2026.</p></div><button class="btn secondary" onclick="showPage('mapa')">Ver océano</button></div></div>
+</section>
+
+<!-- CLIMA -->
+<section id="clima" class="page">
+  <h1>🌦️ Clima actual</h1>
+  <p class="muted">Datos actuales de Open-Meteo para fines informativos. Los avisos oficiales deben consultarse por separado.</p>
+  <div class="grid">
+    <div class="card col-8">
+      <div class="grid">
+        <div class="col-6"><label for="weatherCity">Ciudad</label><select id="weatherCity"><option value="-5.1945,-80.6328,Piura">Piura</option><option value="-3.5669,-80.4515,Tumbes">Tumbes</option><option value="-6.7714,-79.8409,Chiclayo">Chiclayo</option><option value="-8.1116,-79.0288,Trujillo">Trujillo</option><option value="-12.0464,-77.0428,Lima">Lima</option><option value="-13.5319,-71.9675,Cusco">Cusco</option></select></div>
+        <div class="col-6"><label>&nbsp;</label><button class="btn" style="width:100%" onclick="loadWeather()">Actualizar datos</button></div>
+      </div>
+      <div class="weather-main"><div class="weather-icon" id="weatherIcon">🌤️</div><div><div class="weather-big" id="wTemp">--°C</div><div id="wDesc" class="muted">Esperando datos...</div><div id="wTime" class="small">--</div></div></div>
+      <div class="grid">
+        <div class="card col-3"><span class="tag">SENSACIÓN</span><div class="stat" id="wFeel">--</div><div class="small">°C</div></div>
+        <div class="card col-3"><span class="tag">HUMEDAD</span><div class="stat" id="wHumidity">--</div><div class="small">%</div></div>
+        <div class="card col-3"><span class="tag">VIENTO</span><div class="stat" id="wWind">--</div><div class="small">km/h</div></div>
+        <div class="card col-3"><span class="tag">LLUVIA</span><div class="stat" id="wRain">--</div><div class="small">mm</div></div>
+      </div>
+      <div id="weatherStatus" class="small">Consultando...</div>
+
+      <div class="forecast-wrap">
+        <div class="forecast-grid">
+          <div class="forecast-card"><div class="forecast-head"><div><span class="tag">PRÓXIMAS HORAS</span><h3 style="margin-top:7px">Tendencia de temperatura y lluvia</h3></div><span class="small" id="forecastSource">Open-Meteo</span></div><div id="weatherHourly" class="forecast-list"></div></div>
+          <div class="forecast-card"><div class="forecast-head"><div><span class="tag">PRÓXIMOS DÍAS</span><h3 style="margin-top:7px">Pronóstico resumido</h3></div><span class="small">7 días</span></div><div id="weatherDaily" class="daily-list"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card col-4"><span class="tag">NO CONFUNDIR</span><h2 style="margin-top:11px">Clima ≠ alerta</h2><p class="muted">Una condición meteorológica actual no sustituye una alerta o aviso oficial.</p><div class="game-help"><b>Consejo</b><p class="small">Usa fuentes oficiales para decisiones de evacuación, cierre de vías o emergencia.</p></div></div>
+  </div>
+</section>
+
+<!-- MAPA MUNDIAL -->
+<section id="mapa" class="page">
+  <h1>🌎 Mapa mundial de El Niño</h1>
+  <p class="muted">Explora países con impactos documentados por teleconexiones de El Niño y las regiones del Pacífico que NOAA usa para vigilar la temperatura superficial del mar. Los impactos cambian según episodio y estación.</p>
+  <div class="card">
+    <div class="map-toolbar">
+      <button class="btn secondary" onclick="mapMode('all')">🌍 Mundo</button>
+      <button class="btn secondary" onclick="mapMode('countries')">🟢 Países afectados</button>
+      <button class="btn secondary" onclick="mapMode('ocean')">🔥 Océano Niño</button>
+      <button class="btn secondary" onclick="mapMode('peru')">🇵🇪 Perú</button>
+      <button class="btn secondary map-risk-chip" onclick="mapMode('risks')">⚠️ Riesgos</button><button class="btn secondary" onclick="mapMode('equator')">🌐 Ecuador 0°</button>
+    </div>
+    <div class="map-explorer">
+      <div class="map-search-row">
+        <input id="mapSearch" type="search" list="mapPlaces" placeholder="Buscar país, ciudad o región…" aria-label="Buscar lugar en el mapa" onkeydown="if(event.key==='Enter')searchMapPlace()">
+        <datalist id="mapPlaces"></datalist>
+        <button class="btn" onclick="searchMapPlace()">🔎 Buscar</button>
+        <button class="btn secondary" onclick="locateMapUser()">📍 Mi ubicación</button>
+      </div>
+      <div class="map-search-row map-options-row">
+        <label for="mapBaseSelect">Estilo del mapa</label>
+        <select id="mapBaseSelect" onchange="changeMapBase(this.value)" aria-label="Estilo del mapa">
+          <option value="street">🗺️ Calles (estilo clásico)</option>
+          <option value="terrain">⛰️ Relieve</option>
+          <option value="satellite">🛰️ Satélite</option>
+        </select>
+        <button class="btn secondary" onclick="resetMapView()">🌐 Vista mundial</button>
+        <button class="btn secondary" onclick="toggleMapFullscreen()">⛶ Pantalla completa</button>
+      </div>
+      <div class="map-shortcuts" id="mapShortcuts" aria-label="Accesos rápidos a países"></div>
+    </div>
+    <div id="map" role="application" aria-label="Mapa interactivo mundial de El Niño"></div>
+    <p id="mapStatus" class="small" role="status" aria-live="polite" style="margin:8px 2px 0">Preparando mapa interactivo…</p>
+    <p class="small" style="margin:5px 2px 0">El mapa usa Esri y cuenta con una capa alternativa CARTO. La carga de mapas externos depende de tu conexión y de la disponibilidad de sus proveedores.</p>
+    <div class="legend"><span><i class="dot" style="background:#67b99c"></i>País con impactos documentados</span><span><i class="dot" style="background:#f07878"></i>Región oceánica Niño</span><span><i class="dot" style="background:#6bb9de"></i>Ciudad de referencia</span></div>
+    <div class="map-info"><b>🔥 ¿Dónde está el océano más cálido?</b><p class="small" style="margin-bottom:0">Las cajas del mapa corresponden a las regiones Niño 1+2, Niño 3, Niño 3.4 y Niño 4. Los valores mostrados son anomalías de temperatura superficial del mar publicadas por NOAA para agosto de 2026, no una medición segundo a segundo.</p></div>
+  </div>
+  <div class="grid" id="ensoCards"></div>
+  <div class="card"><span class="tag">PAÍSES Y REGIONES</span><h2 style="margin-top:11px">¿Por qué no existe una lista única de “todos” los países afectados?</h2><p class="muted">El Niño cambia sus efectos por estación, intensidad y región. Por eso la app muestra países y áreas de referencia respaldados por patrones documentados por NOAA y la OMM, no una frontera fija de “afectación”.</p><div id="countryList" class="grid"></div></div>
+</section>
+
+<!-- EDUCACION -->
+<section id="educacion" class="page">
+  <h1>📚 Centro educativo</h1><p class="muted">Aprende antes, durante y después de una emergencia.</p>
+  <div class="grid">
+    <div class="card col-4"><span class="tag">ANTES</span><h2 style="margin-top:11px">Prepárate</h2><p>• Identifica rutas de evacuación.</p><p>• Prepara una mochila.</p><p>• Conoce zonas seguras.</p><p>• Protege documentos importantes.</p><p>• Acuerda un punto de encuentro.</p></div>
+    <div class="card col-4"><span class="tag">DURANTE</span><h2 style="margin-top:11px">Actúa</h2><p>• Mantén la calma.</p><p>• Sigue indicaciones oficiales.</p><p>• No cruces corrientes de agua.</p><p>• Aléjate de quebradas y cauces.</p><p>• No toques cables caídos.</p></div>
+    <div class="card col-4"><span class="tag">DESPUÉS</span><h2 style="margin-top:11px">Recupérate</h2><p>• No regreses hasta que sea seguro.</p><p>• Evita estructuras dañadas.</p><p>• Evita agua potencialmente contaminada.</p><p>• Reporta peligros.</p><p>• Mantente informado.</p></div>
+  </div>
+  <div class="grid">
+    <div class="card col-6"><h2>🌊 Inundaciones</h2><p class="muted">Una inundación puede cubrir zonas normalmente secas. No atravieses una corriente cuya profundidad y fuerza desconozcas.</p></div>
+    <div class="card col-6"><h2>⛰️ Huaicos</h2><p class="muted">Pueden transportar lodo, piedras y otros materiales. Aléjate de quebradas y cauces y sigue las rutas de evacuación indicadas.</p></div>
+    <div class="card col-6"><h2>🌎 Sismos</h2><p class="muted">Durante el movimiento, agáchate, cúbrete y sujétate. Aléjate de ventanas y objetos que puedan caer.</p></div>
+    <div class="card col-6"><h2>👨‍👩‍👧‍👦 Plan familiar</h2><p class="muted">Define contactos, rutas, punto de encuentro y qué hacer si la familia se encuentra separada.</p></div>
+  </div>
+  <div class="card ff-glow" style="margin-top:18px">
+    <span class="tag">ENTRENAMIENTO INTERACTIVO</span><h2 style="margin-top:11px">🚨 Simulador de emergencia</h2><p class="muted">Practica decisiones rápidas y aprende por qué una opción es más segura.</p>
+    <div class="ff-sim-grid">
+      <div class="ff-sim-card"><b id="ffSimTitle">Situación 1</b><p id="ffSimQuestion" class="muted">Pulsa comenzar para recibir una situación.</p><div id="ffSimOptions"></div><div id="ffSimResult" class="ff-sim-result">Tu resultado aparecerá aquí.</div></div>
+      <div class="ff-sim-card"><span class="tag">MODO PRÁCTICA</span><h3 style="margin-top:10px">Decide en segundos</h3><p class="muted">Cada respuesta correcta suma XP y te ayuda a dominar los procedimientos de prevención.</p><button class="btn" onclick="startEmergencySim()">▶ Comenzar simulador</button><div class="ff-tip" style="margin-top:10px">Consejo: primero identifica el peligro, luego busca una acción segura y sigue indicaciones oficiales.</div></div>
+    </div>
+  </div>
+
+</section>
+
+<!-- CHECKLIST -->
+<section id="checklist" class="page">
+  <h1>🎒 Mochila de emergencia</h1><p class="muted">Marca los artículos que ya tienes preparados. Se guardan en este navegador.</p>
+  <div class="card">
+    <div class="grid"><div class="col-8"><span class="tag">LISTA DE PREPARACIÓN</span><h2 style="margin-top:10px">Suministros</h2></div><div class="col-4"><div class="progress"><div id="checkProgress"></div></div><p id="checkText" class="small">0% completado</p></div></div>
+    <div id="checklistItems"></div>
+    <div class="btn-row" style="margin-top:15px"><button class="btn secondary" onclick="resetChecklist()">Reiniciar</button><button class="btn" onclick="showPage('home')">Guardar progreso</button></div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section id="quiz" class="page">
+  <h1>🧠 Cuestionario</h1><p class="muted">Comprueba cuánto sabes sobre prevención.</p>
+  <div class="card"><span class="pill" id="quizCounter">Pregunta 1</span><h2 id="quizQuestion" style="margin-top:17px"></h2><div id="quizOptions"></div><p id="quizFeedback" class="muted"></p><div class="btn-row"><button class="btn" id="quizNext" onclick="nextQuestion()" disabled>Siguiente</button><button class="btn secondary" onclick="startQuiz()">Reiniciar</button></div></div>
+</section>
+
+<!-- ASISTENTE -->
+<section id="asistente" class="page">
+  <h1>🤖 Asistente de prevención</h1><p class="muted">Asistente local reforzado con más temas, búsqueda por palabras y respuestas de seguridad.</p>
+  <div class="card">
+    <div class="chat-box" id="chatBox"><div class="chat-msg bot">Hola. Soy el asistente educativo de Fen Force. Puedo ayudarte con El Niño, ENSO, inundaciones, huaicos, sismos, mochila, lluvias, alertas, familia y el juego.</div></div>
+    <div class="btn-row" style="margin-top:12px"><input id="chatInput" placeholder="Escribe tu pregunta..." onkeydown="if(event.key==='Enter')sendChat()" style="flex:1;min-width:180px"><button class="btn" onclick="sendChat()">Enviar</button></div>
+    <div class="chat-suggest"><button class="btn secondary small-btn" onclick="quickChat('¿Qué debo poner en la mochila?')">🎒 Mochila</button><button class="btn secondary small-btn" onclick="quickChat('¿Qué hago durante una inundación?')">🌊 Inundación</button><button class="btn secondary small-btn" onclick="quickChat('¿Qué hago ante un huaico?')">⛰️ Huaico</button><button class="btn secondary small-btn" onclick="quickChat('¿Qué hago durante un sismo?')">🌎 Sismo</button><button class="btn secondary small-btn" onclick="quickChat('¿Qué es Niño 3.4?')">🔥 Niño 3.4</button></div>
+    <p class="small" style="margin-top:13px">Nota: es un asistente local con respuestas educativas, no una IA generativa de internet ni un servicio de emergencias.</p>
+  </div>
+</section>
+
+<!-- JUEGO -->
+<section id="juego" class="page">
+  <h1>🎮 Fen Force — Misión Refugio</h1>
+  <p class="muted">Un juego original de plataformas con inspiración en el género clásico: 20 niveles, suministros, enemigos, obstáculos, habilidades, checkpoints y un jefe final.</p>
+  <div class="grid">
+    <div class="card col-8 game-shell">
+      <div class="game-top">
+        <div class="game-stats"><div class="game-stat">🗺️ Nivel: <b id="gLevel">1/20</b></div><div class="game-stat">❤️ Vida: <b id="gHealth">100</b></div><div class="game-stat">🎒 Suministros: <b id="gSupplies">0</b></div><div class="game-stat">⭐ Puntos: <b id="gScore">0</b></div></div>
+        <span class="tag" id="gWorldTag">ENTRENAMIENTO</span>
+      </div>
+      <canvas id="gameCanvas" width="960" height="540"></canvas>
+      <div class="game-controls"><button class="btn secondary" onclick="gameAction('left')">◀ Mover</button><button class="btn secondary" onclick="gameAction('jump')">⬆ Saltar</button><button class="btn secondary" onclick="gameAction('right')">Mover ▶</button><button class="btn orange" onclick="fireSupply()">📦 Lanzar suministro</button><button class="btn" onclick="startGame()">▶ Iniciar</button><button class="btn secondary" onclick="togglePause()">Ⅱ Pausa</button></div>
+      <div class="game-touch"><button class="touch-btn" onclick="gameAction('left')">◀</button><button class="touch-btn" onclick="gameAction('jump')">⬆</button><button class="touch-btn" onclick="gameAction('right')">▶</button><button class="touch-btn" onclick="fireSupply()">📦</button></div>
+      <div class="game-message" id="gameMessage">Selecciona un personaje y pulsa iniciar.</div>
+      <div class="ff-game-extra">
+        <div class="game-stat">⭐ XP: <b id="gXP">0</b></div><div class="game-stat">🔥 Combo: <b id="gCombo">x1</b></div><div class="game-stat">📍 Distancia: <b id="gDistance">0%</b></div><div class="game-stat">🏆 Logros: <b id="gAchievements">0</b></div>
+      </div>
+      <div class="ff-game-banner"><div><b id="ffGameObjective">OBJETIVO: llega al refugio</b><br><small id="ffGameTip">Recoge suministros, supera obstáculos y no dejes que el desastre te alcance.</small></div><div class="ff-game-breath"><div id="ffDisasterBar2"></div></div></div>
+
+      <div class="disaster-alert" id="disasterAlert"><div><span class="disaster-name" id="disasterName">🌊 DESASTRE</span><div id="disasterHint">En cada nivel un desastre natural te persigue. No te detengas.</div></div><div class="disaster-meter"><div id="disasterMeter"></div></div></div>
+      <div class="boss-panel" id="bossPanel"><div class="boss-title">⚠️ JEFE FINAL: GUARDIÁN DEL DESASTRE</div><div class="boss-progress"><div id="bossBar"></div></div></div>
+    </div>
+    <div class="card col-4">
+      <span class="tag">PERSONAJES</span><h2 style="margin-top:11px">Elige tu personaje</h2><div id="characterGrid" class="character-grid"></div>
+      <div style="height:14px"></div><div class="game-help"><b>🎮 Controles</b><p class="small">A/D o flechas: mover<br>Espacio/flecha arriba: saltar<br>E: lanzar suministro<br>P: pausa</p></div>
+      <div style="height:10px"></div><div class="game-help"><b>📦 Suministros</b><p class="small">Las cajas reemplazan las monedas. Recógelas para sumar puntos y conseguir munición para enemigos y jefe.</p></div>
+      <h3 style="margin-top:15px">Progreso</h3><div id="levelRoadmap" class="level-roadmap"></div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- PROGRESO -->
+<section id="progreso" class="page">
+  <div class="hero ff-glow"><span class="tag">PERFIL DE SUPERVIVENCIA</span><h1>🏆 Tu progreso en Fen Force</h1><p class="muted">Cada lección, respuesta y misión puede ayudarte a subir de nivel y desbloquear logros.</p><div class="status-line"><span class="pill" id="ffProfileName">Invitado</span><span class="pill" id="ffProfileLevel">Nivel 1</span></div></div>
+  <div class="grid">
+    <div class="card col-8"><span class="tag">EXPERIENCIA</span><h2 style="margin-top:11px">Nivel y experiencia</h2><div class="status-line"><div><div class="stat" id="ffXPBig">0 XP</div><div class="small" id="ffXPInfo">0 / 100 XP</div></div><div class="pill" id="ffLevelBadge">Nivel 1</div></div><div class="ff-progress-big" style="margin-top:10px"><div id="ffXPBar"></div></div><div class="ff-kpi-grid" style="margin-top:14px"><div class="ff-kpi"><div class="kpi-icon">🎮</div><div class="kpi-label">Juego</div><div class="kpi-value" id="ffProfileGame">1/20</div></div><div class="ff-kpi"><div class="kpi-icon">🧠</div><div class="kpi-label">Quiz</div><div class="kpi-value" id="ffProfileQuiz">0</div></div><div class="ff-kpi"><div class="kpi-icon">🎒</div><div class="kpi-label">Mochila</div><div class="kpi-value" id="ffProfileBag">0%</div></div><div class="ff-kpi"><div class="kpi-icon">✅</div><div class="kpi-label">Entrenamientos</div><div class="kpi-value" id="ffProfileSim">0</div></div></div></div>
+    <div class="card col-4"><span class="tag">ACCIONES</span><h3 style="margin-top:11px">Tu siguiente paso</h3><p class="muted">Completa una actividad para conseguir más XP.</p><div class="btn-row"><button class="btn" onclick="showPage('quiz')">🧠 Hacer quiz</button><button class="btn secondary" onclick="showPage('juego')">🎮 Jugar</button><button class="btn secondary" onclick="showPage('checklist')">🎒 Prepararme</button></div><div class="ff-tip" style="margin-top:12px">Tus datos se guardan localmente en este navegador.</div></div>
+    <div class="card col-12"><div class="status-line"><div><span class="tag">LOGROS</span><h2 style="margin-top:10px">Insignias de Fen Force</h2></div><span class="pill" id="ffAchievementCount">0/8</span></div><div class="ff-badge-grid" id="ffBadgeGrid"></div></div>
+  </div>
+</section>
+
+<!-- AJUSTES -->
+<section id="ajustes" class="page">
+  <h1>⚙️ Configuración</h1><p class="muted">Personaliza la experiencia de Fen Force sin cambiar sus funciones principales.</p>
+  <div class="grid">
+    <div class="card col-7"><span class="tag">APARIENCIA Y JUEGO</span><div class="ff-setting"><div><b>🌙 Modo oscuro</b><div class="small">Cambia la apariencia de la app.</div></div><label class="ff-switch"><input id="ffDarkToggle" type="checkbox" onchange="toggleDarkMode(this.checked)"><span class="ff-slider"></span></label></div>
+      <div class="ff-setting"><div><b>🔊 Sonidos de interfaz</b><div class="small">Activa avisos sonoros básicos.</div><button class="btn secondary small-btn" style="margin-top:7px" onclick="ffPlayFeedback('ok')">🔊 Probar sonido</button></div><label class="ff-switch"><input id="ffSoundToggle" type="checkbox" checked onchange="saveSettings()"><span class="ff-slider"></span></label></div>
+      <div class="ff-setting"><div><b>🎬 Efectos visuales</b><div class="small">Mantén lluvia, destellos y partículas del juego.</div></div><label class="ff-switch"><input id="ffFxToggle" type="checkbox" checked onchange="saveSettings()"><span class="ff-slider"></span></label></div>
+      <div class="ff-setting"><div><b>📳 Vibración táctil</b><div class="small">Usa vibración cuando el dispositivo lo permita.</div></div><label class="ff-switch"><input id="ffVibrateToggle" type="checkbox" onchange="saveSettings()"><span class="ff-slider"></span></label></div>
+      <div class="ff-setting"><div><b>🎨 Calidad gráfica</b><div class="small">Ultra añade efectos; ahorro prioriza fluidez.</div></div><select id="ffQualitySelect" class="ff-quality" onchange="applyQuality(this.value)"><option value="ultra">Ultra</option><option value="balanced">Equilibrado</option><option value="battery">Ahorro</option></select></div>
+    </div>
+    <div class="card col-5"><span class="tag">DATOS</span><h3 style="margin-top:11px">Perfil actual</h3><p class="muted">Usuario: <b id="ffSettingsUser">Invitado</b></p><div class="btn-row"><button class="btn secondary" onclick="saveUserProfile();toast('Progreso guardado.')">💾 Guardar</button><button class="btn secondary" onclick="resetFFSettings()">↺ Restablecer ajustes</button><button class="btn red" onclick="resetEnhancedProgress()">♻️ Reiniciar progreso</button></div><div class="ff-tip" style="margin-top:12px">El reinicio afecta el progreso local de Fen Force para el usuario actual.</div><div class="ff-tip" style="margin-top:9px">💡 Los ajustes se guardan automáticamente en este navegador. El modo gráfico cambia la cantidad de efectos del juego.</div></div>
+  </div>
+</section>
+
+<div class="ff-bottom-nav">
+  <button onclick="showPage('home')"><span>🏠</span>Inicio</button><button onclick="showPage('mapa')"><span>🗺️</span>Mapa</button><button onclick="showPage('progreso')"><span>🏆</span>Progreso</button><button onclick="showPage('juego')"><span>🎮</span>Juego</button><button onclick="showPage('ajustes')"><span>⚙️</span>Ajustes</button>
+</div>
+
+<footer>Fen Force · Proyecto educativo · Los mapas oceánicos muestran regiones e indicadores ENSO de referencia; no sustituyen avisos oficiales.</footer>
+</main></div>
+<div id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ============================================================
+   FEN FORCE — JAVASCRIPT COMPLETO Y ROBUSTO
+   ============================================================ */
+
+/* -------- HELPERS -------- */
+const $ = id => document.getElementById(id);
+const safeString = value => String(value ?? "");
+const safeLower = value => safeString(value).toLowerCase();
+
+function toast(message){
+  const box = $("toast");
+  if(!box) return;
+  box.textContent = safeString(message);
+  box.style.display = "block";
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(() => box.style.display = "none", 2800);
+}
+
+/* -------- LOGIN -------- */
+let currentUser = "Invitado";
+function login(){
+  const user = safeString($("loginUser")?.value).trim();
+  const pass = safeString($("loginPass")?.value).trim();
+  if(!user || !pass){ toast("Escribe usuario y contraseña."); return; }
+  currentUser = user;
+  $("userBadge").textContent = user;
+  $("loginScreen").classList.add("hidden");
+  toast("Bienvenido a Fen Force");
+}
+function logout(){ $("loginScreen").classList.remove("hidden"); }
+$("loginPass")?.addEventListener("keydown", event => { if(safeLower(event?.key) === "enter") login(); });
+
+/* -------- NAV -------- */
+function showPage(id, button){
+  const page = $(safeString(id));
+  if(!page) return;
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  page.classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  if(button) button.classList.add("active");
+  else{
+    const target = [...document.querySelectorAll(".nav-btn")].find(b => safeString(b.getAttribute("onclick")).includes("'" + safeString(id) + "'"));
+    if(target) target.classList.add("active");
+  }
+  if(id === "mapa") setTimeout(()=>{initMap();if(map)map.invalidateSize(true);},180);
+  if(id === "juego"){ resizeGameCanvas(); drawGame(); }
+}
+
+/* -------- WEATHER -------- */
+const weatherCodes = {
+  0:["Despejado","☀️"],1:["Mayormente despejado","🌤️"],2:["Parcialmente nublado","⛅"],3:["Nublado","☁️"],
+  45:["Niebla","🌫️"],48:["Niebla","🌫️"],51:["Llovizna ligera","🌦️"],53:["Llovizna moderada","🌦️"],55:["Llovizna intensa","🌧️"],
+  61:["Lluvia ligera","🌧️"],63:["Lluvia moderada","🌧️"],65:["Lluvia intensa","🌧️"],71:["Nieve ligera","🌨️"],73:["Nieve moderada","🌨️"],75:["Nieve intensa","❄️"],
+  80:["Chubascos ligeros","🌦️"],81:["Chubascos moderados","🌧️"],82:["Chubascos fuertes","⛈️"],95:["Tormenta","⛈️"],96:["Tormenta con granizo","⛈️"],99:["Tormenta intensa","⛈️"]
+};
+async function loadWeather(){
+  const raw=safeString($("weatherCity")?.value);const parts=raw.split(",");
+  const lat=safeString(parts[0]),lon=safeString(parts[1]),city=parts.slice(2).join(",")||"la ciudad seleccionada";
+  const status=$("weatherStatus");if(status)status.textContent="Consultando pronóstico actualizado…";
+  try{
+    const url="https://api.open-meteo.com/v1/forecast?latitude="+encodeURIComponent(lat)+"&longitude="+encodeURIComponent(lon)+"&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability,precipitation,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=7&timezone=auto";
+    const response=await fetch(url,{cache:"no-store"});if(!response.ok)throw new Error("weather");
+    const data=await response.json();const c=data?.current;if(!c)throw new Error("no current");
+    $("wTemp").textContent=Math.round(Number(c.temperature_2m))+"°C";
+    $("wFeel").textContent=Math.round(Number(c.apparent_temperature));
+    $("wHumidity").textContent=safeString(c.relative_humidity_2m);
+    $("wWind").textContent=safeString(c.wind_speed_10m);
+    $("wRain").textContent=safeString(c.precipitation);
+    const info=weatherCodes[c.weather_code]||["Condición variable","🌤️"];
+    $("wDesc").textContent=info[0];$("weatherIcon").textContent=info[1];
+    $("wTime").textContent="Dato: "+safeString(c.time)+" · "+safeString(data.timezone);
+    if(status)status.textContent="Datos cargados para "+city+" · pronóstico de 7 días disponible.";
+    renderWeatherForecast(data);
+    const dashWeather=$("dashWeather");if(dashWeather)dashWeather.textContent=Math.round(Number(c.temperature_2m))+"°C";
+    const dashNote=$("dashWeatherNote");if(dashNote)dashNote.textContent=city+" · "+info[0];
+    const stamp=$("dashboardTimestamp");if(stamp)stamp.textContent="Clima actualizado · "+safeString(c.time);
+  }catch(error){
+    if(status)status.textContent="No se pudo cargar el clima. Comprueba tu conexión e inténtalo nuevamente.";
+    const host=$("weatherHourly");if(host)host.innerHTML='<div class="small">Pronóstico temporalmente no disponible.</div>';
+    const daily=$("weatherDaily");if(daily)daily.innerHTML='<div class="small">Vuelve a intentar más tarde.</div>';
+  }
+}
+function renderWeatherForecast(data){
+  const h=data?.hourly||{},d=data?.daily||{};const hHost=$("weatherHourly"),dHost=$("weatherDaily");if(!hHost||!dHost)return;
+  const nowIndex=Math.max(0,Array.isArray(h.time)?h.time.findIndex(t=>safeString(t)>=safeString(data?.current?.time)):0);
+  const start=nowIndex<0?0:nowIndex;const items=[];
+  for(let i=start;i<Math.min(start+6,(h.time||[]).length);i++){
+    const code=Number(h.weather_code?.[i]);const info=weatherCodes[code]||["Variable","🌤️"];items.push('<div class="forecast-item"><div class="forecast-time">'+safeString(h.time?.[i]).slice(11,16)+'</div><div style="font-size:24px">'+info[1]+'</div><div class="forecast-temp">'+Math.round(Number(h.temperature_2m?.[i]))+'°</div><div class="forecast-rain">🌧️ '+safeString(h.precipitation_probability?.[i]??0)+'%</div></div>');
+  }
+  hHost.innerHTML=items.join("")||'<div class="small">Sin datos horarios.</div>';
+  const days=[];const names=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+  for(let i=0;i<Math.min(7,(d.time||[]).length);i++){
+    const dt=new Date(safeString(d.time[i])+"T12:00:00");const day=names[dt.getDay()]||safeString(d.time[i]);const info=weatherCodes[Number(d.weather_code?.[i])]||["Variable","🌤️"];
+    days.push('<div class="daily-item"><div class="daily-day">'+day+'<br><span class="small">'+safeString(d.time?.[i])+'</span></div><div class="daily-weather">'+info[1]+' '+info[0]+'<br><span class="small">🌧️ Prob. lluvia '+safeString(d.precipitation_probability_max?.[i]??0)+'%</span></div><div class="temp-range">'+Math.round(Number(d.temperature_2m_max?.[i]))+'° / '+Math.round(Number(d.temperature_2m_min?.[i]))+'°</div></div>');
+  }
+  dHost.innerHTML=days.join("")||'<div class="small">Sin datos diarios.</div>';
+}
+loadWeather();
+window.__enWeatherTimer=setInterval(loadWeather,15*60*1000);
+
+/* -------- MAP DATA -------- */
+let map = null;
+let worldLayer = null;
+let affectedLayer = null;
+let cityLayer = null;
+let ensoLayer = null;
+let equatorLayer = null;
+let riskLayer = null;
+
+const affectedCountries = [
+  {code:"PER",name:"Perú",lat:-9.2,lon:-75.0,effect:"Lluvias intensas e inundaciones en algunos episodios y zonas."},
+  {code:"ECU",name:"Ecuador",lat:-1.4,lon:-78.4,effect:"Lluvias intensas en la costa durante determinados episodios."},
+  {code:"COL",name:"Colombia",lat:4.5,lon:-74.1,effect:"Cambios de precipitación regional."},
+  {code:"CHL",name:"Chile",lat:-30.0,lon:-71.0,effect:"Patrones estacionales de lluvia y temperatura pueden cambiar."},
+  {code:"ARG",name:"Argentina",lat:-34.0,lon:-64.0,effect:"Patrones de precipitación regionales, especialmente en ciertas estaciones."},
+  {code:"BRA",name:"Brasil",lat:-10.0,lon:-52.0,effect:"Cambios de lluvia y temperatura en distintas áreas."},
+  {code:"BOL",name:"Bolivia",lat:-17.0,lon:-65.0,effect:"Variaciones regionales de precipitación."},
+  {code:"PRY",name:"Paraguay",lat:-23.3,lon:-58.3,effect:"Variabilidad de lluvia regional."},
+  {code:"URY",name:"Uruguay",lat:-32.8,lon:-56.0,effect:"Cambios estacionales de precipitación."},
+  {code:"PAN",name:"Panamá",lat:8.5,lon:-80.0,effect:"Variaciones de lluvia en Centroamérica."},
+  {code:"CRI",name:"Costa Rica",lat:9.9,lon:-84.1,effect:"Cambios en lluvia y sequedad según temporada."},
+  {code:"NIC",name:"Nicaragua",lat:12.9,lon:-85.2,effect:"Variaciones de precipitación y sequía regional."},
+  {code:"HND",name:"Honduras",lat:14.8,lon:-86.2,effect:"Cambios de precipitación."},
+  {code:"SLV",name:"El Salvador",lat:13.8,lon:-88.9,effect:"Variaciones de lluvia y temperatura."},
+  {code:"GTM",name:"Guatemala",lat:15.7,lon:-90.2,effect:"Variabilidad climática estacional."},
+  {code:"BLZ",name:"Belice",lat:17.2,lon:-88.7,effect:"Cambios regionales asociados a teleconexiones."},
+  {code:"MEX",name:"México",lat:23.6,lon:-102.5,effect:"Cambios de precipitación y temperatura en diferentes regiones."},
+  {code:"USA",name:"Estados Unidos",lat:36.5,lon:-100.0,effect:"Patrones regionales de lluvia y temperatura; varían por estación."},
+  {code:"JPN",name:"Japón",lat:36.2,lon:138.3,effect:"Cambios de temperatura y circulación regional."},
+  {code:"IND",name:"India",lat:22.9,lon:79.1,effect:"El monzón puede debilitarse durante El Niño."},
+  {code:"IDN",name:"Indonesia",lat:-2.0,lon:118.0,effect:"Condiciones más secas y menor lluvia en zonas extensas durante El Niño."},
+  {code:"PHL",name:"Filipinas",lat:12.9,lon:122.0,effect:"Condiciones más secas en numerosos episodios de El Niño."},
+  {code:"MYS",name:"Malasia",lat:4.2,lon:101.9,effect:"Impactos de sequedad y calor en episodios intensos."},
+  {code:"PNG",name:"Papúa Nueva Guinea",lat:-6.3,lon:147.0,effect:"Variaciones de precipitación y sequía."},
+  {code:"AUS",name:"Australia",lat:-25.3,lon:133.8,effect:"Sequedad frecuente en el este y norte durante El Niño."},
+  {code:"ZAF",name:"Sudáfrica",lat:-30.6,lon:22.9,effect:"Sequedad regional en el sur de África durante episodios de El Niño."},
+  {code:"NAM",name:"Namibia",lat:-22.6,lon:17.1,effect:"Variaciones de lluvia y sequedad."},
+  {code:"BWA",name:"Botsuana",lat:-22.3,lon:24.7,effect:"Mayor riesgo de condiciones secas durante ciertos episodios."},
+  {code:"ZWE",name:"Zimbabue",lat:-19.0,lon:29.2,effect:"Variabilidad de precipitaciones y sequedad."},
+  {code:"MOZ",name:"Mozambique",lat:-18.7,lon:35.5,effect:"Cambios regionales de precipitación."},
+  {code:"ETH",name:"Etiopía",lat:9.1,lon:40.5,effect:"Cambios de precipitación en regiones del este africano."},
+  {code:"KEN",name:"Kenia",lat:0.2,lon:37.9,effect:"Lluvias pueden aumentar en ciertas estaciones."},
+  {code:"TZA",name:"Tanzania",lat:-6.3,lon:34.9,effect:"Cambios de precipitación estacionales."},
+  {code:"SOM",name:"Somalia",lat:5.2,lon:46.2,effect:"Variaciones de lluvias en África oriental."}
+];
+
+const cities = [
+  {name:"Lima",lat:-12.0464,lon:-77.0428},
+  {name:"Piura",lat:-5.1945,lon:-80.6328},
+  {name:"Tumbes",lat:-3.5669,lon:-80.4515},
+  {name:"Guayaquil",lat:-2.1894,lon:-79.8891},
+  {name:"Darwin",lat:-12.4634,lon:130.8456},
+  {name:"Jakarta",lat:-6.2088,lon:106.8456},
+  {name:"Manila",lat:14.5995,lon:120.9842}
+];
+
+/* NOAA CPC values: August 2026, published in September 2026 */
+const ensoRegions = [
+  {name:"Niño 1+2",west:-90,east:-80,south:-10,north:0,anomaly:3.4,temp:28.4,color:"rgba(211,64,70,.34)",text:"Muy cálida"},
+  {name:"Niño 3",west:-150,east:-90,south:-5,north:5,anomaly:2.5,temp:27.9,color:"rgba(231,103,73,.30)",text:"Cálida"},
+  {name:"Niño 3.4",west:-170,east:-120,south:-5,north:5,anomaly:1.8,temp:28.3,color:"rgba(244,159,80,.28)",text:"Cálida"},
+  {name:"Niño 4",west:160,east:210,south:-5,north:5,anomaly:0.1,temp:29.1,color:"rgba(249,220,128,.24)",text:"Cerca del promedio"}
+];
+
+function normalizeLng(lon){
+  let x = Number(lon);
+  while(x > 180) x -= 360;
+  while(x < -180) x += 360;
+  return x;
+}
+
+function initMap(){
+  if(map){ map.invalidateSize(true); return; }
+  if(!window.L){ const el=$("map"); if(el) el.innerHTML="No se pudo cargar la librería del mapa. Comprueba tu conexión y recarga."; return; }
+  map = L.map("map",{
+    preferCanvas:true,minZoom:2,maxZoom:18,worldCopyJump:false,
+    maxBounds:[[-85,-180],[85,180]],maxBoundsViscosity:0.75,
+    zoomControl:false,attributionControl:true
+  }).setView([7,-75],3);
+  L.control.zoom({position:"topright"}).addTo(map);
+
+  const mapStatus = document.getElementById("mapStatus");
+  function setMapStatus(message){ if(mapStatus) mapStatus.textContent=message; }
+  // Basemaps: Esri is the primary source; CARTO raster is a no-key fallback.
+  // Avoids the public OSM tile endpoint that returned 403 in the user's screenshot.
+  const tileOpts = {maxZoom:19,noWrap:true,keepBuffer:2,updateWhenIdle:true,detectRetina:false};
+  const baseLayers = {
+    street: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{
+      ...tileOpts,maxZoom:19,attribution:'Tiles © <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>'
+    }),
+    terrain: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",{
+      ...tileOpts,maxZoom:18,attribution:'Map tiles © <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>'
+    }),
+    satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{
+      ...tileOpts,maxZoom:18,attribution:'Imagery © <a href="https://www.esri.com/" target="_blank" rel="noopener">Esri</a>'
+    })
+  };
+  const cartoFallback = L.tileLayer("https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{
+    ...tileOpts,maxZoom:19,attribution:'© OpenStreetMap contributors · © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>'
+  });
+  map._enBaseLayers = baseLayers;
+  let activeBase = "street";
+  let baseErrorCount=0;
+  let fallbackActive=false;
+  function installBase(name){
+    const chosen=baseLayers[name] || baseLayers.street;
+    [ ...Object.values(baseLayers), cartoFallback ].forEach(layer=>{if(map.hasLayer(layer))map.removeLayer(layer);});
+    activeBase=Object.prototype.hasOwnProperty.call(baseLayers,name)?name:"street";
+    baseErrorCount=0;fallbackActive=false;
+    chosen.addTo(map);
+    chosen.off("tileerror");
+    chosen.on("tileerror",()=>{
+      if(activeBase!==name || fallbackActive)return;
+      baseErrorCount++;
+      if(baseErrorCount===1) setMapStatus("Cargando el mapa… algunas teselas tardan en responder.");
+      if(baseErrorCount>=5){
+        fallbackActive=true;
+        map.removeLayer(chosen);
+        cartoFallback.addTo(map);
+        setMapStatus("Usando mapa alternativo por disponibilidad del proveedor. Capas temáticas y marcadores activos.");
+        cartoFallback.on("tileerror",()=>setMapStatus("El proveedor cartográfico no responde en esta red. Prueba GitHub Pages o revisa la conexión."));
+        cartoFallback.once("load",()=>setMapStatus("Mapa alternativo cargado · CARTO. Puedes seguir explorando."));
+      }
+    });
+    chosen.once("load",()=>{if(!fallbackActive)setMapStatus("Mapa listo · Capa: "+({street:"Calles",terrain:"Relieve",satellite:"Satélite"}[activeBase])+" · Esri.");});
+    setMapStatus("Cargando capa "+({street:"de calles",terrain:"de relieve",satellite:"satelital"}[activeBase])+"…");
+  }
+  installBase("street");
+  window.__enInstallBase = installBase;
+  buildMapShortcuts();
+  L.control.scale({imperial:false,metric:true,position:"bottomleft"}).addTo(map);
+  map.whenReady(()=>setTimeout(()=>map.invalidateSize(true),250));
+
+  /* World layer */
+  fetch("https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson")
+    .then(r => r.ok ? r.json() : Promise.reject(new Error("geojson")))
+    .then(data => {
+      worldLayer = L.geoJSON(data,{style:{color:"#cbded2",weight:.7,fillColor:"#f6faf7",fillOpacity:.34}}).addTo(map);
+      applyCountryHighlight();
+    })
+    .catch(() => {
+      toast("El mapa mundial no pudo cargar los límites de países; los marcadores siguen disponibles.");
+    });
+
+  affectedLayer = L.layerGroup().addTo(map);
+  cityLayer = L.layerGroup().addTo(map);
+  ensoLayer = L.layerGroup().addTo(map);
+  equatorLayer = L.layerGroup().addTo(map);
+  riskLayer = L.layerGroup();
+
+  affectedCountries.forEach(c => {
+    L.circleMarker([c.lat,c.lon],{radius:7,color:"#4ca87a",fillColor:"#74c99a",fillOpacity:.92,weight:2})
+      .bindPopup("<b>" + c.name + "</b><br>Referencia de impacto:<br>" + c.effect)
+      .addTo(affectedLayer);
+  });
+
+  cities.forEach(c => {
+    L.circleMarker([c.lat,c.lon],{radius:6,color:"#4d9fc5",fillColor:"#72c2e6",fillOpacity:.95,weight:2})
+      .bindPopup("<b>" + c.name + "</b><br>Ciudad de referencia.")
+      .addTo(cityLayer);
+  });
+
+  renderEducationalRiskLayer();
+  drawEnsoRegions();
+  L.polyline([[-0.15,-180],[-0.15,180]],{color:"#8cb4c6",weight:1,dashArray:"6 5",opacity:.7}).addTo(equatorLayer);
+  L.marker([0,0],{opacity:0}).addTo(equatorLayer).bindPopup("Línea ecuatorial");
+
+  map.on("zoomend moveend",()=>{});
+  renderEnsoCards();
+  renderCountryList();
+}
+
+function applyCountryHighlight(){
+  if(!worldLayer) return;
+  const wanted = new Set(affectedCountries.map(c=>c.code));
+  worldLayer.eachLayer(layer => {
+    const p = layer.feature?.properties || {};
+    const code = safeString(p.ISO_A3 || p.ADM0_A3 || p.iso_a3).toUpperCase();
+    const hit = wanted.has(code);
+    layer.setStyle(hit ? {color:"#4da878",weight:1.3,fillColor:"#92d9af",fillOpacity:.40} : {color:"#cbded2",weight:.7,fillColor:"#f6faf7",fillOpacity:.30});
+    if(hit){
+      const name = affectedCountries.find(c=>c.code===code)?.name || safeString(p.ADMIN || p.name);
+      layer.bindPopup("<b>"+name+"</b><br>País de referencia con impactos teleconectados documentados. El efecto depende de estación y episodio.");
+    }
+  });
+}
+
+function drawEnsoRegions(){
+  if(!map || !ensoLayer) return;
+  ensoLayer.clearLayers();
+  ensoRegions.forEach(r=>{
+    let bounds;
+    if(r.east > 180){
+      const a = [[r.south,normalizeLng(r.west)],[r.north,180]];
+      const b = [[r.south,-180],[r.north,normalizeLng(r.east)]];
+      L.rectangle(a,{color:"#dd6468",weight:1.2,fillColor:r.color,fillOpacity:.75,dashArray:"5 4"}).bindPopup("<b>"+r.name+"</b><br>Anomalía: +"+r.anomaly+" °C<br>Media: "+r.temp+" °C<br>"+r.text).addTo(ensoLayer);
+      L.rectangle(b,{color:"#dd6468",weight:1.2,fillColor:r.color,fillOpacity:.75,dashArray:"5 4"}).bindPopup("<b>"+r.name+"</b><br>Anomalía: +"+r.anomaly+" °C<br>Media: "+r.temp+" °C<br>"+r.text).addTo(ensoLayer);
+      return;
+    }
+    bounds = [[r.south,r.west],[r.north,r.east]];
+    L.rectangle(bounds,{color:"#dd6468",weight:1.2,fillColor:r.color,fillOpacity:.75,dashArray:"5 4"})
+      .bindPopup("<b>"+r.name+"</b><br>Anomalía: +"+r.anomaly+" °C<br>Media: "+r.temp+" °C<br>"+r.text)
+      .addTo(ensoLayer);
+  });
+}
+
+function changeMapBase(name){
+  if(!map)initMap();
+  if(!map || !window.L)return;
+  const allowed=["street","terrain","satellite"];
+  if(!allowed.includes(name))name="street";
+  const select=$("mapBaseSelect");if(select)select.value=name;
+  if(typeof window.__enInstallBase==="function")window.__enInstallBase(name);
+}
+function resetMapView(){initMap();if(map)map.flyTo([7,-75],3,{duration:1.1});}
+function toggleMapFullscreen(){
+  const el=$("map");if(!el)return;
+  if(!document.fullscreenElement && el.requestFullscreen){el.requestFullscreen().then(()=>setTimeout(()=>map&&map.invalidateSize(true),250)).catch(()=>{});}
+  else if(document.exitFullscreen){document.exitFullscreen().then(()=>setTimeout(()=>map&&map.invalidateSize(true),250)).catch(()=>{});}
+}
+function searchMapPlace(){
+  const input=$("mapSearch");if(!input)return;
+  const q=safeString(input.value).trim();if(!q)return;
+  initMap();if(!map)return;
+  const key=q.toLocaleLowerCase("es");
+  const country=affectedCountries.find(c=>safeString(c.name).toLocaleLowerCase("es")===key || safeString(c.code).toLocaleLowerCase("es")===key);
+  const city=cities.find(c=>safeString(c.name).toLocaleLowerCase("es")===key);
+  const region=ensoRegions.find(r=>safeString(r.name).toLocaleLowerCase("es")===key);
+  if(country){map.flyTo([country.lat,country.lon],5,{duration:1.15});L.popup().setLatLng([country.lat,country.lon]).setContent("<b>"+country.name+"</b><br>Zona de referencia: los impactos dependen del episodio y la estación.").openOn(map);return;}
+  if(city){map.flyTo([city.lat,city.lon],8,{duration:1.15});L.popup().setLatLng([city.lat,city.lon]).setContent("<b>"+city.name+"</b><br>Ciudad de referencia").openOn(map);return;}
+  if(region){const lat=(region.south+region.north)/2;let lon=(region.west+region.east)/2;if(lon>180)lon-=360;map.flyTo([lat,lon],5,{duration:1.15});L.popup().setLatLng([lat,lon]).setContent("<b>"+region.name+"</b><br>Anomalía de referencia: +"+region.anomaly+" °C<br>"+region.text+"<br>Indicador publicado, no dato en tiempo real.").openOn(map);return;}
+  // Geocoding runs only after the user submits a search (Nominatim public endpoint).
+  const status=$("mapStatus");if(status)status.textContent="Buscando lugar…";
+  fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q="+encodeURIComponent(q),{headers:{"Accept-Language":"es"}})
+    .then(r=>{if(!r.ok)throw new Error("geocoder");return r.json();})
+    .then(results=>{
+      if(!Array.isArray(results)||!results.length)throw new Error("notfound");
+      const r=results[0],lat=Number(r.lat),lon=Number(r.lon);
+      if(!Number.isFinite(lat)||!Number.isFinite(lon))throw new Error("coords");
+      map.flyTo([lat,lon],Math.max(5,Math.min(13,Number(r.zoom)||8)),{duration:1.15});
+      L.popup().setLatLng([lat,lon]).setContent("<b>"+safeString(r.display_name).replace(/[<>]/g,"")+"</b>").openOn(map);
+      if(status)status.textContent="Lugar encontrado. Los resultados geográficos son orientativos.";
+    }).catch(()=>{if(status)status.textContent="No se encontró ese lugar o el servicio de búsqueda no está disponible. Prueba con un nombre más específico.";});
+}
+function locateMapUser(){
+  initMap();if(!map)return;
+  const status=$("mapStatus");
+  if(!navigator.geolocation){if(status)status.textContent="Este navegador no permite geolocalización.";return;}
+  if(status)status.textContent="Solicitando permiso de ubicación…";
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat=pos.coords.latitude,lon=pos.coords.longitude;
+    map.flyTo([lat,lon],11,{duration:1.1});
+    L.circleMarker([lat,lon],{radius:9,color:"#fff",weight:3,fillColor:"#2479e8",fillOpacity:1}).addTo(map).bindPopup("Tu ubicación aproximada en este dispositivo").openPopup();
+    if(status)status.textContent="Ubicación mostrada. No se almacena en la app.";
+  },()=>{if(status)status.textContent="No se pudo obtener la ubicación. Autoriza el permiso o busca una ciudad.";},{enableHighAccuracy:false,timeout:10000,maximumAge:60000});
+}
+function buildMapShortcuts(){
+  const host=$("mapShortcuts");if(!host)return;
+  const picks=["Perú","Ecuador","Indonesia","Australia","India","México","Estados Unidos","Japón","Brasil","Chile"];
+  host.innerHTML=picks.map(name=>'<button type="button" class="map-shortcut" onclick="focusMapCountry(\''+name.replace(/'/g,"\\'")+ '\')">'+name+'</button>').join("");
+  const list=$("mapPlaces");if(list)list.innerHTML=[...affectedCountries.map(c=>c.name),...cities.map(c=>c.name),"Niño 1+2","Niño 3","Niño 3.4","Niño 4"].map(n=>'<option value="'+safeString(n).replace(/[<>\"]/g,"")+'"></option>').join("");
+}
+function focusMapCountry(name){
+  const c=affectedCountries.find(x=>safeString(x.name).toLocaleLowerCase("es")===safeString(name).toLocaleLowerCase("es"));
+  if(c){mapGo(c.lat,c.lon,5);return;}
+  const i=$("mapSearch");if(i){i.value=name;searchMapPlace();}
+}
+
+
+function renderEducationalRiskLayer(){
+  if(!map||!riskLayer||!window.L)return;
+  riskLayer.clearLayers();
+  const zones=[
+    {name:"Piura · zona educativa",lat:-5.19,lon:-80.63,radius:90000,kind:"Lluvias e inundaciones"},
+    {name:"Tumbes · zona educativa",lat:-3.57,lon:-80.45,radius:75000,kind:"Lluvias e inundaciones"},
+    {name:"Lambayeque · zona educativa",lat:-6.77,lon:-79.84,radius:65000,kind:"Lluvias intensas"},
+    {name:"La Libertad · zona educativa",lat:-8.11,lon:-79.03,radius:65000,kind:"Lluvias intensas"},
+    {name:"Lima · zona urbana",lat:-12.05,lon:-77.04,radius:50000,kind:"Preparación urbana"}
+  ];
+  zones.forEach(z=>{
+    L.circle([z.lat,z.lon],{radius:z.radius,color:"#e7a74e",weight:1.5,fillColor:"#f3c36f",fillOpacity:.16,dashArray:"7 6"}).bindPopup("<b>"+z.name+"</b><br>Tipo de referencia: "+z.kind+".<br><span class='small'>Capa educativa, no representa una alerta oficial ni un pronóstico en tiempo real.</span>").addTo(riskLayer);
+  });
+}
+
+function mapMode(mode){
+  initMap();
+  if(!map) return;
+  // Clear overlays first so switching modes never stacks stale layers.
+  [affectedLayer,cityLayer,ensoLayer,equatorLayer,riskLayer].forEach(layer=>{if(layer && map.hasLayer(layer)) map.removeLayer(layer);});
+  if(mode === "all"){
+    map.flyTo([8,-25],2,{animate:true,duration:1});
+    affectedLayer.addTo(map); cityLayer.addTo(map); ensoLayer.addTo(map);
+  }else if(mode === "countries"){
+    map.flyTo([8,-25],2,{animate:true,duration:1});
+    affectedLayer.addTo(map);
+  }else if(mode === "ocean"){
+    map.flyTo([0,-135],3,{animate:true,duration:1});
+    ensoLayer.addTo(map);
+  }else if(mode === "peru"){
+    map.flyTo([-8.5,-77],5,{animate:true,duration:1});
+    affectedLayer.addTo(map); cityLayer.addTo(map); ensoLayer.addTo(map);
+  }else if(mode === "equator"){
+    map.flyTo([0,-120],3,{animate:true,duration:1});
+    equatorLayer.addTo(map); ensoLayer.addTo(map);
+  }else if(mode === "risks"){
+    map.flyTo([-7,-78],5,{animate:true,duration:1});
+    riskLayer.addTo(map); cityLayer.addTo(map);
+    const status=$("mapStatus");if(status)status.textContent="Capas educativas de riesgo: no son un pronóstico ni una alerta oficial.";
+  }
+  setTimeout(()=>map.invalidateSize(true),120);
+}
+
+function mapGo(lat,lon,zoom){ initMap(); if(map) map.setView([lat,lon],zoom,{animate:true}); }
+
+function renderEnsoCards(){
+  const host = $("ensoCards");
+  if(!host) return;
+  host.innerHTML = ensoRegions.map(r=>`<div class="card col-3"><span class="tag">${r.name}</span><div class="enso-value">+${r.anomaly} °C</div><div class="small">SST media: ${r.temp} °C · ${r.text}</div></div>`).join("");
+}
+function renderCountryList(){
+  const host = $("countryList");
+  if(!host) return;
+  host.innerHTML = affectedCountries.map(c=>`<div class="card col-3"><b>${c.name}</b><div class="small" style="margin-top:5px">${c.effect}</div></div>`).join("");
+}
+
+/* -------- CHECKLIST -------- */
+const checklist = [
+  "Agua potable","Alimentos no perecibles","Botiquín de primeros auxilios","Medicamentos personales",
+  "Linterna y pilas","Radio portátil","Documentos protegidos","Dinero en efectivo","Silbato",
+  "Artículos de higiene","Ropa de abrigo","Cargador portátil","Artículos para bebés o adultos mayores","Suministros para mascotas"
+];
+function readChecklist(){
+  try{const value=JSON.parse(localStorage.getItem("en_checklist")||"[]");return Array.isArray(value)?value.filter(n=>Number.isInteger(n)&&n>=0&&n<checklist.length):[];}
+  catch(e){return [];}
+}
+function saveChecklist(){try{localStorage.setItem("en_checklist",JSON.stringify(checked));}catch(e){/* storage disabled: checklist remains usable for this session */}}
+let checked = readChecklist();
+function renderChecklist(){
+  $("checklistItems").innerHTML = checklist.map((item,index)=>`<label class="list-item"><input type="checkbox" ${checked.includes(index)?"checked":""} onchange="toggleCheck(${index},this.checked)"><span>${item}</span></label>`).join("");
+  const pct = Math.round(checked.length/checklist.length*100);
+  $("checkProgress").style.width = pct + "%";
+  $("checkText").textContent = pct + "% completado · " + checked.length + "/" + checklist.length;
+  $("homeProgress").style.width = pct + "%";
+  $("homeProgressText").textContent = pct + "% de la mochila completado";
+}
+function toggleCheck(index,active){
+  if(active) checked = [...new Set([...checked,index])];
+  else checked = checked.filter(x=>x!==index);
+  saveChecklist();
+  renderChecklist();
+}
+function resetChecklist(){
+  if(!confirm("¿Reiniciar toda la lista?")) return;
+  checked=[];saveChecklist();renderChecklist();
+}
+renderChecklist();
+
+/* -------- QUIZ -------- */
+const questions = [
+  {q:"¿Qué debes hacer si las autoridades ordenan evacuar?",options:["Ignorar la indicación","Evacuar por las rutas indicadas","Acercarte a la zona de peligro"],answer:1,explanation:"La evacuación debe realizarse siguiendo las indicaciones oficiales."},
+  {q:"¿Qué debes evitar durante una inundación?",options:["Escuchar información","Cruzar corrientes de agua","Mantener la calma"],answer:1,explanation:"La corriente puede ser profunda, rápida o peligrosa."},
+  {q:"¿Qué puede contener una mochila de emergencia?",options:["Agua y botiquín","Solo juguetes","Objetos sin utilidad"],answer:0,explanation:"Debe contener artículos esenciales adaptados a la familia."},
+  {q:"¿Qué se recomienda hacer durante un sismo?",options:["Agacharse, cubrirse y sujetarse","Correr hacia ventanas","Usar el ascensor"],answer:0,explanation:"Es una medida básica de protección durante el movimiento."},
+  {q:"¿Qué puede transportar un huaico?",options:["Solo aire","Lodo, piedras y agua","Nieve únicamente"],answer:1,explanation:"Los huaicos pueden transportar diversos materiales por quebradas y cauces."},
+  {q:"¿Qué hacer ante cables eléctricos caídos?",options:["Tocarlos","Acercarte","Mantenerte alejado y reportarlos"],answer:2,explanation:"Los cables pueden seguir energizados y ser peligrosos."},
+  {q:"¿Qué debes hacer ante una calle inundada?",options:["Atravesarla rápidamente","Buscar una ruta segura","Seguir a un vehículo"],answer:1,explanation:"No se puede conocer con seguridad la profundidad ni fuerza del agua."},
+  {q:"¿Para qué sirve un plan familiar de emergencia?",options:["Para definir contactos, rutas y puntos de encuentro","Para evitar prepararse","Para ignorar alertas"],answer:0,explanation:"Un plan ayuda a organizar las acciones de una familia."},
+  {q:"¿Qué región se usa habitualmente para vigilar el estado central de ENSO?",options:["Niño 3.4","Atlántico Norte","Mar Mediterráneo"],answer:0,explanation:"NOAA utiliza Niño 3.4 como una de las regiones principales de vigilancia de ENSO."}
+];
+let quizIndex=0,quizScore=0,quizAnswered=false;
+function startQuiz(){quizIndex=0;quizScore=0;quizAnswered=false;$("quizNext").disabled=true;renderQuizQuestion();}
+function renderQuizQuestion(){
+  const q=questions[quizIndex];
+  $("quizCounter").textContent="Pregunta "+(quizIndex+1)+" de "+questions.length;
+  $("quizQuestion").textContent=q.q;
+  $("quizOptions").innerHTML=q.options.map((o,i)=>`<button class="quiz-option" onclick="answerQuiz(${i},this)">${String.fromCharCode(65+i)}. ${o}</button>`).join("");
+  $("quizFeedback").textContent="";$("quizNext").disabled=true;quizAnswered=false;
+}
+function answerQuiz(index,button){
+  if(quizAnswered) return;
+  quizAnswered=true;
+  const q=questions[quizIndex];
+  document.querySelectorAll(".quiz-option").forEach(b=>b.disabled=true);
+  if(index===q.answer){quizScore++;button.classList.add("correct");$("quizFeedback").textContent="✅ Correcto. "+q.explanation;}
+  else{button.classList.add("wrong");$("quizFeedback").textContent="❌ Correcta: "+q.options[q.answer]+". "+q.explanation;}
+  $("quizNext").disabled=false;$("quizNext").textContent=quizIndex===questions.length-1?"Ver resultado":"Siguiente";
+}
+function nextQuestion(){
+  if(!quizAnswered) return;
+  if(quizIndex<questions.length-1){quizIndex++;renderQuizQuestion();return;}
+  const pct=Math.round(quizScore/questions.length*100);
+  $("quizQuestion").textContent="Resultado final: "+quizScore+"/"+questions.length;
+  $("quizOptions").innerHTML=`<div class="game-help">Has conseguido <b>${pct}%</b>. Sigue repasando las medidas de prevención y los conceptos de ENSO.</div>`;
+  $("quizFeedback").textContent="Cuestionario terminado.";$("quizNext").disabled=true;
+  $("homeQuizText").textContent="Último resultado: "+quizScore+"/"+questions.length;
+}
+startQuiz();
+
+/* -------- ASSISTANT — FIXED AGAINST undefined.toLowerCase -------- */
+const knowledge = [
+  {keys:["mochila","suministro","suministros","kit"],answer:"Una mochila de emergencia puede incluir agua potable, alimentos no perecibles, botiquín, medicamentos personales, linterna, radio, documentos protegidos, dinero, artículos de higiene, ropa y otros elementos que tu familia necesite."},
+  {keys:["inundacion","inundación","inundado","desborde","rio","río","agua"],answer:"Durante una inundación aléjate de ríos y zonas inundadas. No camines ni conduzcas por corrientes de agua. Sigue las indicaciones oficiales y evita cables eléctricos caídos."},
+  {keys:["huaico","huayco","quebrada","lodo"],answer:"Un huaico puede transportar lodo, piedras y otros materiales. Aléjate de quebradas y cauces, no intentes cruzar el flujo y sigue las rutas de evacuación indicadas."},
+  {keys:["sismo","terremoto","temblor"],answer:"Durante un sismo, agáchate, cúbrete y sujétate. Aléjate de ventanas y objetos que puedan caer. Después sigue las indicaciones oficiales."},
+  {keys:["niño","nino","fenomeno","fenómeno","enso"],answer:"El Niño es la fase cálida del ENSO y se relaciona con el calentamiento anómalo del Pacífico ecuatorial. Sus efectos climáticos cambian según estación, región e intensidad."},
+  {keys:["nino 1+2","nino1+2","niño 1+2","niño1+2"],answer:"La región Niño 1+2 se encuentra en el extremo oriental del Pacífico ecuatorial, aproximadamente entre 90°O-80°O y 0°-10°S. NOAA la usa para vigilar la temperatura superficial del mar."},
+  {keys:["nino 3.4","niño 3.4","3.4"],answer:"Niño 3.4 es una región del Pacífico ecuatorial entre 170°O-120°O y 5°N-5°S. Es una región de vigilancia muy importante para ENSO."},
+  {keys:["nino 3","niño 3"],answer:"Niño 3 cubre aproximadamente 150°O-90°O y 5°N-5°S. Se usa junto con otras regiones para vigilar el estado oceánico de ENSO."},
+  {keys:["nino 4","niño 4"],answer:"Niño 4 cubre aproximadamente 160°E-150°O y 5°N-5°S, cerca de la línea internacional de cambio de fecha."},
+  {keys:["oceano","océano","mar caliente","agua caliente","temperatura del mar"],answer:"Para el océano, la app muestra las regiones Niño 1+2, Niño 3, Niño 3.4 y Niño 4. No son mapas de alerta, sino regiones estandarizadas para vigilar anomalías de temperatura superficial del mar."},
+  {keys:["alerta","aviso","emergencia","emergencias"],answer:"Las alertas reales deben consultarse en fuentes oficiales. Este asistente es educativo y no sustituye los servicios de emergencia ni una autoridad de gestión del riesgo."},
+  {keys:["familia","plan familiar","punto de encuentro","contacto"],answer:"Define contactos de emergencia, un punto de encuentro, rutas de evacuación y qué hacer si la familia está separada. Practicar el plan ayuda a reducir la confusión durante una emergencia."},
+  {keys:["despues","después","regresar","regreso"],answer:"No regreses a una zona afectada hasta que sea considerada segura. Evita estructuras dañadas, agua posiblemente contaminada y cables caídos."},
+  {keys:["lluvia","lluvias intensas","tormenta"],answer:"Ante lluvias intensas mantente informado, evita quebradas y cauces y ten lista tu mochila. Si una autoridad ordena evacuar, sigue la ruta indicada."},
+  {keys:["juego","mision","misión","nivel","jefe","boss"],answer:"Misión Refugio tiene 20 niveles. Recoge cajas de suministros para sumar puntos y obtener munición. El nivel 20 contiene al Guardián del Desastre, que debes derrotar antes de entrar al refugio."},
+  {keys:["hola","buenas","saludos"],answer:"¡Hola! Estoy listo para ayudarte con prevención, El Niño, ENSO, inundaciones, huaicos, sismos, mochila o el juego."}
+];
+
+function scoreKnowledge(query,keys){
+  let score=0;
+  keys.forEach(k=>{ if(query.includes(safeLower(k))) score += Math.max(1,safeLower(k).length/5); });
+  return score;
+}
+function getBotAnswer(text){
+  const query=safeLower(text).trim();
+  if(!query) return "Escribe una pregunta y te responderé.";
+  let best=null,bestScore=0;
+  for(const item of knowledge){const s=scoreKnowledge(query,item.keys);if(s>bestScore){bestScore=s;best=item;}}
+  if(best && bestScore>0) return best.answer;
+  return "Puedo ayudarte con El Niño, ENSO, regiones Niño 1+2/3/3.4/4, océano, inundaciones, huaicos, sismos, mochila, lluvias, alertas, familia y Misión Refugio. Prueba con una de esas palabras.";
+}
+function addChat(message,type){
+  const box=$("chatBox");const div=document.createElement("div");div.className="chat-msg "+safeString(type);div.textContent=safeString(message);box.appendChild(div);box.scrollTop=box.scrollHeight;
+}
+function sendChat(){
+  const input=$("chatInput");const message=safeString(input?.value).trim();
+  if(!message){toast("Escribe una pregunta.");return;}
+  addChat(message,"user");input.value="";setTimeout(()=>addChat(getBotAnswer(message),"bot"),170);
+}
+function quickChat(message){
+  const safe=safeString(message);
+  $("chatInput").value=safe;
+  sendChat();
+}
+
+/* ============================================================
+   GAME — 20 LEVELS, ORIGINAL PLATFORMER
+   ============================================================ */
+
+const canvas=$("gameCanvas");
+const ctx=canvas.getContext("2d");
+let gameRAF=0;
+
+const characters=[
+  {id:"rescatista",name:"Rescatista",emoji:"🧑‍🚒",speed:4.8,jump:12.8,health:115,ability:"Más vida",doubleJump:false},
+  {id:"exploradora",name:"Exploradora",emoji:"🧗",speed:5.7,jump:13.4,health:96,ability:"Doble salto",doubleJump:true},
+  {id:"paramedico",name:"Paramédico",emoji:"🧑‍⚕️",speed:4.5,jump:12.4,health:128,ability:"Resiste más daño",doubleJump:false},
+  {id:"ingeniera",name:"Ingeniera",emoji:"👷",speed:5.0,jump:13.1,health:106,ability:"Salto equilibrado",doubleJump:false}
+];
+let selectedCharacter=0;
+
+const levelNames=[
+  "Parque de entrenamiento","Lluvia intensa","Barrio inundado","Calles resbalosas","Escuela segura",
+  "Camino costero","Puente en riesgo","Zona de huaicos","Barrio de rescate","Refugio temporal",
+  "Tormenta tropical","Ruta de evacuación","Ciudad anegada","Zona de emergencia","Río desbordado",
+  "Centro de operaciones","Ruta extrema","Última evacuación","Zona crítica","El gran desastre"
+];
+
+const levelThemes=[
+  ["#bdebd8","#eaf9ef","#78ad85","#99d09d","#da7070"],
+  ["#b6dceb","#ecf8f5","#649c79","#80b0a0","#d96d6d"],
+  ["#9fd1df","#eaf5f2","#5b9872","#83a98e","#d95f66"],
+  ["#b8e0ef","#eefaf3","#659d77","#9abf99","#db7070"],
+  ["#c3ecf0","#f7f8e7","#68a178","#9ccd89","#de7777"],
+  ["#aad8ef","#f7efd9","#6e9b6e","#b4c88e","#da6e6e"],
+  ["#bfdcec","#edf4f4","#62896c","#99a8a0","#de7373"],
+  ["#d1d8e5","#f3e8d8","#7b8e7b","#aaa99e","#d66060"],
+  ["#b9dfeb","#f4f4df","#6b9b71","#93bc90","#db7070"],
+  ["#bddff0","#eff9ef","#65a17a","#98c8a3","#db7070"],
+  ["#abd0e5","#edf0f7","#608e6d","#82a5a9","#d96767"],
+  ["#bce1f0","#ebf8f1","#629b76","#89b899","#de7373"],
+  ["#acd5e6","#eff2e9","#588d70","#7da690","#d85d5d"],
+  ["#b0c9da","#eee7db","#687f6c","#8d9789","#dc6464"],
+  ["#a0d2e5","#e9f2ea","#557f67","#71917f","#da5d5d"],
+  ["#9dcade","#edf0e9","#53796b","#758f82","#d85b5b"],
+  ["#8fc2d8","#e9efea","#4f6f60","#688179","#d65353"],
+  ["#89bdd7","#e5ebe7","#4a6659","#647b70","#d55151"],
+  ["#7db0c8","#e0e8e3","#425e52","#586f65","#cf4c4c"],
+  ["#628ea7","#dce6df","#365045","#4c6359","#c93d47"]
+];
+
+let game={
+  running:false,paused:false,over:false,victory:false,
+  level:1,score:0,supplies:0,
+  worldWidth:4200,
+  camera:0,
+  checkpoint:60,
+  player:{x:60,y:350,w:34,h:46,vx:0,vy:0,ground:false,jumps:0,anim:0,hurt:0,health:100},
+  platforms:[],hazards:[],suppliesItems:[],enemies:[],shots:[],particles:[],movingPlatforms:[],springs:[],exit:null,boss:null,disaster:null,
+  keys:{left:false,right:false},seed:1
+};
+
+function selected(){ return characters[selectedCharacter] || characters[0]; }
+function seededRandom(){ const x=Math.sin(game.seed++)*10000; return x-Math.floor(x); }
+
+function renderCharacterCards(){
+  $("characterGrid").innerHTML=characters.map((c,i)=>`<div class="character-card ${i===selectedCharacter?"selected":""}" onclick="selectCharacter(${i})"><div class="character-avatar">${c.emoji}</div><b>${c.name}</b><div class="small">${c.ability}</div><div class="small">Vida: ${c.health} · Vel: ${c.speed}</div><div class="ability">${c.doubleJump?"Puede hacer doble salto":"Habilidad pasiva especial"}</div></div>`).join("");
+}
+function selectCharacter(index){
+  if(game.running){toast("Pausa o termina la partida para cambiar de personaje.");return;}
+  const safeIndex=Number(index);
+  selectedCharacter=Number.isFinite(safeIndex)&&safeIndex>=0&&safeIndex<characters.length?safeIndex:0;
+  resetPlayer();renderCharacterCards();updateGameHUD();drawGame();
+}
+renderCharacterCards();
+
+function renderRoadmap(){
+  $("levelRoadmap").innerHTML=levelNames.map((name,i)=>`<div class="level-node ${i+1<game.level?"done":""} ${i+1===game.level?"current":""}" title="${name}">${i+1}</div>`).join("");
+}
+renderRoadmap();
+
+function resetPlayer(){
+  game.player.x=game.checkpoint || 60;
+  game.player.y=260;
+  game.player.vx=0;game.player.vy=0;game.player.ground=false;game.player.jumps=0;game.player.anim=0;game.player.hurt=0;
+  if(!game.running) game.player.health=selected().health;
+}
+
+function buildLevel(level){
+  game.level=level;game.seed=level*173+17;game.worldWidth=3900+level*190;game.platforms=[];game.hazards=[];game.suppliesItems=[];game.enemies=[];game.movingPlatforms=[];game.springs=[];game.shots=[];game.particles=[];game.camera=0;game.checkpoint=60;
+  const floorY=465;
+  game.platforms.push({x:0,y:floorY,w:game.worldWidth,h:95,type:"ground"});
+
+  const platformCount=16+level;
+  for(let i=0;i<platformCount;i++){
+    const x=240+i*(185+seededRandom()*55);
+    const y=300-seededRandom()*155;
+    const w=105+seededRandom()*90;
+    game.platforms.push({x,y,w,h:18,type:"platform"});
+  }
+
+  /* moving platforms become common later */
+  const movingCount=Math.max(0,Math.floor((level-2)/2));
+  for(let i=0;i<movingCount;i++){
+    const x=800+i*330;
+    const y=270+seededRandom()*80;
+    game.movingPlatforms.push({x,y,w:110,h:17,baseY:y,range:45+level*2,phase:seededRandom()*Math.PI*2,speed:.017+level*.0005,dir:1});
+  }
+
+  const hazardCount=8+level*2;
+  for(let i=0;i<hazardCount;i++){
+    const x=350+seededRandom()*(game.worldWidth-800);
+    const type=seededRandom()<.35?"spike":seededRandom()<.5?"mud":"rock";
+    game.hazards.push({x,y:floorY-(type==="rock"?30:28),w:type==="spike"?46:36,h:type==="rock"?30:28,type});
+  }
+
+  /* supply boxes */
+  const supplyCount=19+Math.floor(level*.85);
+  for(let i=0;i<supplyCount;i++){
+    const x=165+i*((game.worldWidth-450)/supplyCount);
+    const elevated=seededRandom()<.46;
+    const y=elevated?270-seededRandom()*105:floorY-42;
+    game.suppliesItems.push({x,y,size:24,taken:false,pulse:seededRandom()*6.28});
+  }
+
+  /* enemies */
+  const enemyCount=Math.max(2,3+Math.floor(level*.9));
+  for(let i=0;i<enemyCount;i++){
+    const x=600+i*((game.worldWidth-1050)/enemyCount);
+    game.enemies.push({x,y:floorY-36,w:35,h:36,vx:(.8+level*.035)*(i%2===0?1:-1),minX:x-90,maxX:x+90,alive:true,type:i%3===0?"drone":"mud",anim:seededRandom()*10});
+  }
+
+  /* spring pads */
+  for(let i=0;i<Math.floor(level/2);i++){
+    const x=650+i*520+seededRandom()*80;
+    game.springs.push({x,y:floorY-20,w:38,h:20,bounce:-16});
+  }
+
+  game.exit={x:game.worldWidth-150,y:floorY-94,w:74,h:94};
+
+  /* DESASTRE PERSEGUIDOR: uno de tres en cada nivel. */
+  const disasterCycle=["huayco","inundacion","sismo"];
+  const disasterNames={huayco:"⛰️ HUAYCO",inundacion:"🌊 INUNDACIÓN",sismo:"💥 ONDA SÍSMICA"};
+  const disasterType=disasterCycle[(level-1)%disasterCycle.length];
+  const baseSpeed=2.55+level*0.085;
+  game.disaster={type:disasterType,name:disasterNames[disasterType],x:Math.max(-520,60-430-level*3),width:190,height:250,speed:Math.min(5.15,baseSpeed),intensity:1+level*0.055,phase:Math.random()*Math.PI*2,hitCooldown:0,warning:0};
+
+  if(level===20){
+    game.boss={x:game.worldWidth-670,y:floorY-128,w:112,h:128,hp:30,maxHp:30,dir:-1,attackTimer:0,jumpTimer:0,alive:true,phase:0};
+    for(let i=0;i<15;i++){
+      game.suppliesItems.push({x:game.worldWidth-1350+i*66,y:floorY-44-(i%2)*90,size:24,taken:false,pulse:seededRandom()*6.28});
+    }
+  }else game.boss=null;
+
+  resetPlayer();
+  game.over=false;game.victory=false;
+  $("gWorldTag").textContent=["ENTRENAMIENTO","LLUVIA","INUNDACIÓN","RESBALOSO","ESCUELA","COSTA","PUENTE","HUAICO","RESCATE","REFUGIO","TORMENTA","EVACUACIÓN","CIUDAD","EMERGENCIA","RÍO","OPERACIONES","EXTREMO","ÚLTIMA RUTA","ZONA CRÍTICA","JEFE FINAL"][level-1] || "MISIÓN";
+  $("gameMessage").textContent="Nivel "+level+": "+levelNames[level-1];
+  renderRoadmap();updateBossPanel();updateGameHUD();drawGame();
+}
+
+function startGame(){
+  if(game.over||game.victory){game.level=1;game.score=0;game.supplies=0;game.running=false;game.paused=false;game.over=false;game.victory=false;buildLevel(1);}
+  if(!game.platforms.length) buildLevel(game.level);
+  if(!game.player.health) game.player.health=selected().health;
+  game.running=true;game.paused=false;$("gameMessage").textContent="¡Comienza la misión!";cancelAnimationFrame(gameRAF);gameLoop();
+}
+function togglePause(){
+  if(!game.running) return;
+  game.paused=!game.paused;
+  $("gameMessage").textContent=game.paused?"Juego pausado.":"¡Continúa la misión!";
+  if(!game.paused) gameLoop(); else drawGame();
+}
+
+function gameAction(action){
+  if(!game.running||game.paused) return;
+  if(action==="left"){game.keys.left=true;game.keys.right=false;game.player.vx=-selected().speed;game.player.facing=-1;setTimeout(()=>game.keys.left=false,160);}
+  if(action==="right"){game.keys.right=true;game.keys.left=false;game.player.vx=selected().speed;game.player.facing=1;setTimeout(()=>game.keys.right=false,160);}
+  if(action==="jump"){if(game.player.ground){game.player.vy=-selected().jump;game.player.ground=false;game.player.jumps=1;}else if(selected().doubleJump && game.player.jumps<2){game.player.vy=-selected().jump*.92;game.player.jumps=2;}}
+}
+
+function fireSupply(){
+  if(!game.running||game.paused) return;
+  if(game.supplies<=0){toast("No tienes suministros para lanzar.");return;}
+  game.supplies--;
+  const d=game.player.facing||1;
+  game.shots.push({x:game.player.x+game.player.w/2,y:game.player.y+19,vx:d*9.7,vy:-1.8,life:120,rotation:0,enemy:false});
+  spawnParticles(game.player.x+17,game.player.y+20,6,"#f1c66f");
+  updateGameHUD();
+}
+
+window.addEventListener("keydown",event=>{
+  const key=safeLower(event?.key);
+  if(["arrowleft","arrowright","arrowup"," "].includes(key)) event.preventDefault();
+  if(key==="arrowleft"||key==="a"){game.keys.left=true;game.player.facing=-1;}
+  if(key==="arrowright"||key==="d"){game.keys.right=true;game.player.facing=1;}
+  if((key==="arrowup"||key===" ")&&game.running&&!game.paused){
+    if(game.player.ground){game.player.vy=-selected().jump;game.player.ground=false;game.player.jumps=1;}
+    else if(selected().doubleJump && game.player.jumps<2){game.player.vy=-selected().jump*.92;game.player.jumps=2;}
+  }
+  if(key==="e") fireSupply();
+  if(key==="p") togglePause();
+});
+window.addEventListener("keyup",event=>{const key=safeLower(event?.key);if(key==="arrowleft"||key==="a")game.keys.left=false;if(key==="arrowright"||key==="d")game.keys.right=false;});
+
+function spawnParticles(x,y,count,color){for(let i=0;i<count;i++)game.particles.push({x,y,vx:(Math.random()-.5)*4,vy:(Math.random()-.6)*4,life:22+Math.random()*30,maxLife:52,size:2+Math.random()*4,color});}
+function damagePlayer(amount){
+  if(game.player.hurt>0) return;
+  let final=Number(amount)||0;
+  if(selected().id==="paramedico") final*=.75;
+  game.player.health-=final;game.player.hurt=55;game.player.vx=(game.player.facing||1)>0?-5:5;spawnParticles(game.player.x+17,game.player.y+20,10,"#ee8b8b");
+  if(game.player.health<=0){game.player.health=0;game.running=false;game.over=true;$("gameMessage").textContent="💥 Misión fallida. Pulsa Iniciar para volver a empezar.";}
+  updateGameHUD();
+}
+function rectsOverlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+
+function updateEnemies(){
+  const p=game.player;
+  for(const e of game.enemies){
+    if(!e.alive) continue;
+    e.x+=e.vx;e.anim+=.14;if(e.x<e.minX||e.x>e.maxX)e.vx*=-1;
+    const eb={x:e.x,y:e.y,w:e.w,h:e.h};
+    if(rectsOverlap(p,eb)){
+      if(p.vy>3&&p.y+p.h<e.y+18){e.alive=false;p.vy=-7;game.score+=130;spawnParticles(e.x+17,e.y+16,15,"#f0ad72");}
+      else damagePlayer(.62);
+    }
+  }
+}
+
+function updateShots(){
+  for(const s of game.shots){
+    s.x+=s.vx;s.y+=s.vy;s.vy+=.075;s.life--;s.rotation+=.18;
+    if(!s.enemy){
+      for(const e of game.enemies){
+        if(!e.alive) continue;
+        if(s.x>e.x&&s.x<e.x+e.w&&s.y>e.y&&s.y<e.y+e.h){e.alive=false;s.life=0;game.score+=150;spawnParticles(e.x+17,e.y+16,16,"#f0bd72");}
+      }
+      if(game.boss&&game.boss.alive&&s.x>game.boss.x&&s.x<game.boss.x+game.boss.w&&s.y>game.boss.y&&s.y<game.boss.y+game.boss.h){game.boss.hp--;s.life=0;game.score+=180;spawnParticles(game.boss.x+56,game.boss.y+50,15,"#ffbd65");if(game.boss.hp<=0){game.boss.hp=0;game.boss.alive=false;game.score+=3000;$("gameMessage").textContent="🔥 ¡JEFE DERROTADO! Llega al refugio.";spawnParticles(game.boss.x+55,game.boss.y+55,50,"#ffd76f");}}
+    }else{
+      if(s.x>game.player.x&&s.x<game.player.x+game.player.w&&s.y>game.player.y&&s.y<game.player.y+game.player.h){s.life=0;damagePlayer(.8);}
+    }
+  }
+  game.shots=game.shots.filter(s=>s.life>0&&s.x>-200&&s.x<game.worldWidth+200);
+}
+
+function updateBoss(){
+  const b=game.boss;
+  if(!b||!b.alive){updateBossPanel();return;}
+  b.attackTimer++;b.jumpTimer++;b.phase+=.05;b.x+=b.dir*(1.05+game.level*.035);
+  if(b.x<game.worldWidth-1130||b.x>game.worldWidth-320)b.dir*=-1;
+  if(b.jumpTimer>165){b.jumpTimer=0;b.y-=55;} else b.y+=1.1;
+  if(b.y>337)b.y=337;
+  if(b.attackTimer>100){b.attackTimer=0;const d=game.player.x<b.x?-1:1;game.shots.push({x:b.x+56,y:b.y+54,vx:d*4.4,vy:-1.2,life:160,rotation:0,enemy:true});}
+  if(rectsOverlap(game.player,{x:b.x,y:b.y,w:b.w,h:b.h})){damagePlayer(.95);game.player.vx=game.player.x<b.x?-7:7;}
+  updateBossPanel();
+}
+
+function completeLevel(){
+  if(!game.running) return;
+  game.running=false;game.score+=450;$("gameMessage").textContent="✅ Nivel "+game.level+" completado.";toast("¡Nivel "+game.level+" superado!");
+  setTimeout(()=>{if(game.level<20){game.level++;game.player.health=Math.min(selected().health,game.player.health+22);buildLevel(game.level);game.running=true;gameLoop();}},650);
+}
+function completeVictory(){
+  game.running=false;game.victory=true;game.score+=5000;$("gameMessage").textContent="🏆 ¡VICTORIA! Completaste los 20 niveles y derrotaste al Guardián del Desastre.";toast("🏆 ¡Completaste Misión Refugio!");drawGame();updateGameHUD();
+}
+function updateBossPanel(){
+  const panel=$("bossPanel");
+  if(game.level===20&&game.boss?.alive){panel.classList.add("show");$("bossBar").style.width=(game.boss.hp/game.boss.maxHp*100)+"%";}
+  else panel.classList.remove("show");
+}
+function updateGameHUD(){
+  $("gLevel").textContent=game.level+"/20";$("gHealth").textContent=Math.max(0,Math.ceil(game.player.health));$("gSupplies").textContent=game.supplies;$("gScore").textContent=game.score;$("homeGameText").textContent="Juego: nivel "+game.level+"/20";
+  if($("disasterName")){
+    const d=game.disaster;
+    $("disasterName").textContent=d?d.name:"🌪️ DESASTRE";
+    $("disasterHint").textContent=d?(d.type==="huayco"?"Una avalancha de lodo y rocas viene detrás de ti.":d.type==="inundacion"?"Una crecida de agua avanza por el terreno y te persigue.":"Una onda sísmica recorre el suelo y se acerca desde atrás."):"Prepárate para el desastre perseguidor.";
+    $("disasterMeter").style.width=disasterDistancePercent()+"%";
+  }
+  updateBossPanel();renderRoadmap();
+}
+
+function updateDisaster(){
+  const d=game.disaster;
+  if(!d||!game.running||game.paused||game.over||game.victory)return;
+  const p=game.player;
+  d.phase+=0.055;
+  if(d.hitCooldown>0)d.hitCooldown--;
+  /* The disaster stays just behind the player when they keep moving, but catches up when they stop. */
+  const playerSpeed=Math.abs(p.vx||0);
+  const catchup=playerSpeed<1.2?0.90:playerSpeed<3?0.38:0;
+  d.speed=Math.min(5.35,2.55+game.level*0.085+catchup);
+  d.x+=d.speed;
+  const front=d.x+d.width;
+  if(front>p.x-8 && d.x<p.x+p.w){
+    d.warning++;
+    if(d.hitCooldown<=0){
+      damagePlayer(game.level>=16?29:22);
+      d.hitCooldown=62;
+      d.x=Math.max(-650,p.x-310);
+      p.vx=Math.max(p.vx,2.3);
+      spawnParticles(Math.max(p.x-12,d.x+d.width),p.y+p.h-12,22,d.type==="inundacion"?"#7bbfe7":d.type==="huayco"?"#9b7158":"#d7ad72");
+      $("gameMessage").textContent="⚠️ ¡"+d.name+" te alcanzó! ¡Corre y supera los obstáculos!";
+    }
+  }else{
+    d.warning=Math.max(0,d.warning-1);
+  }
+}
+
+function disasterDistancePercent(){
+  const d=game.disaster;if(!d)return 0;
+  const distance=Math.max(0,game.player.x-(d.x+d.width));
+  return Math.max(0,Math.min(100,100-distance/5.2));
+}
+
+function updateGame(){
+  if(!game.running||game.paused)return;
+  const p=game.player;
+  if(p.hurt>0)p.hurt--;p.anim+=.17;
+  const speed=selected().speed;
+  if(game.keys.left){p.vx=-speed;p.facing=-1;} else if(game.keys.right){p.vx=speed;p.facing=1;} else p.vx*=.80;
+  p.x+=p.vx;p.x=Math.max(0,Math.min(game.worldWidth-p.w,p.x));
+  p.vy+=.58;if(p.vy>14)p.vy=14;p.y+=p.vy;p.ground=false;
+  for(const platform of game.platforms){if(p.x+p.w>platform.x&&p.x<platform.x+platform.w&&p.y+p.h>=platform.y&&p.y+p.h<=platform.y+22&&p.vy>=0){p.y=platform.y-p.h;p.vy=0;p.ground=true;p.jumps=0;}}
+  for(const mp of game.movingPlatforms){mp.y=mp.baseY+Math.sin(gameFrame*.05+mp.phase)*mp.range;if(p.x+p.w>mp.x&&p.x<mp.x+mp.w&&p.y+p.h>=mp.y&&p.y+p.h<=mp.y+24&&p.vy>=0){p.y=mp.y-p.h;p.vy=0;p.ground=true;p.jumps=0;}}
+  for(const spring of game.springs){if(rectsOverlap(p,spring)&&p.vy>=0){p.vy=spring.bounce;p.ground=false;p.jumps=0;spawnParticles(spring.x+19,spring.y,10,"#86d5aa");}}
+  if(p.y>730){damagePlayer(35);p.x=game.checkpoint;p.y=230;p.vy=0;}
+  for(const h of game.hazards){if(rectsOverlap(p,{x:h.x,y:h.y,w:h.w,h:h.h}))damagePlayer(h.type==="rock"?.38:.68);}
+  for(const item of game.suppliesItems){if(item.taken)continue;item.pulse+=.08;const box={x:item.x-12,y:item.y-12,w:24,h:24};if(rectsOverlap(p,box)){item.taken=true;game.supplies++;game.score+=80;spawnParticles(item.x,item.y,15,"#9de2b5");}}
+  updateDisaster();updateEnemies();updateShots();updateBoss();
+  if(game.level>2 && p.x>game.worldWidth*.48 && game.checkpoint<game.worldWidth*.48) game.checkpoint=game.worldWidth*.48;
+  if(game.level>8 && p.x>game.worldWidth*.72 && game.checkpoint<game.worldWidth*.72) game.checkpoint=game.worldWidth*.72;
+  if(game.exit&&rectsOverlap(p,game.exit)){if(game.level===20){if(!game.boss||!game.boss.alive)completeVictory();else $("gameMessage").textContent="Derrota al jefe final antes de entrar al refugio.";}else completeLevel();}
+  for(const part of game.particles){part.x+=part.vx;part.y+=part.vy;part.vy+=.05;part.life--;}
+  game.particles=game.particles.filter(p=>p.life>0);
+  game.camera+=(Math.max(0,Math.min(game.worldWidth-canvas.width,p.x-canvas.width*.37))-game.camera)*.11;
+  updateGameHUD();
+}
+let gameFrame=0;
+
+function drawCloud(x,y,s){ctx.fillStyle="rgba(255,255,255,.78)";ctx.beginPath();ctx.arc(x,y,24*s,0,Math.PI*2);ctx.arc(x+28*s,y-10*s,31*s,0,Math.PI*2);ctx.arc(x+64*s,y,24*s,0,Math.PI*2);ctx.fill();}
+function drawBackground(theme){
+  const g=ctx.createLinearGradient(0,0,0,canvas.height);g.addColorStop(0,theme[0]);g.addColorStop(1,theme[1]);ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="rgba(255,245,190,.78)";ctx.beginPath();ctx.arc(800,85,41,0,Math.PI*2);ctx.fill();
+  drawCloud(100-game.camera*.07,95,1);drawCloud(460-game.camera*.05,130,.8);drawCloud(780-game.camera*.09,160,.6);
+  ctx.fillStyle=theme[3];for(let i=0;i<10;i++){const x=i*190-(game.camera*.14%190);ctx.beginPath();ctx.moveTo(x,465);ctx.lineTo(x+95,285+(i%2)*35);ctx.lineTo(x+200,465);ctx.fill();}
+  for(let i=0;i<16;i++){const x=i*125-(game.camera*.28%125);const y=390;ctx.fillStyle="#705a46";ctx.fillRect(x+18,y,9,70);ctx.fillStyle="#79ac7e";ctx.beginPath();ctx.arc(x+22,y-16,28,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x,y-1,20,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+43,y-1,20,0,Math.PI*2);ctx.fill();}
+}
+function drawPlatforms(theme){
+  ctx.save();ctx.translate(-game.camera,0);
+  for(const p of game.platforms){
+    if(p.type==="ground"){
+      ctx.fillStyle=theme[2];ctx.fillRect(p.x,p.y,p.w,p.h);ctx.fillStyle="rgba(255,255,255,.18)";ctx.fillRect(p.x,p.y,p.w,8);ctx.fillStyle="rgba(28,80,47,.12)";for(let x=p.x;x<p.x+p.w;x+=34)ctx.fillRect(x,p.y+32,18,5);
+    }else{roundRectPath(p.x,p.y,p.w,p.h,8);ctx.fillStyle="#4f8e67";ctx.fill();ctx.fillStyle="rgba(255,255,255,.45)";roundRectPath(p.x,p.y,p.w,5,3);ctx.fill();}
+  }
+  for(const mp of game.movingPlatforms){roundRectPath(mp.x,mp.y,mp.w,mp.h,7);ctx.fillStyle="#5a9270";ctx.fill();ctx.fillStyle="#e2f7e8";ctx.fillRect(mp.x+12,mp.y+5,mp.w-24,3);}
+  ctx.restore();
+}
+function roundRectPath(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+function drawHazards(theme){
+  ctx.save();ctx.translate(-game.camera,0);
+  for(const h of game.hazards){
+    if(h.type==="spike"){ctx.fillStyle=theme[4];for(let x=h.x;x<h.x+h.w;x+=15){ctx.beginPath();ctx.moveTo(x,h.y+h.h);ctx.lineTo(x+7.5,h.y);ctx.lineTo(x+15,h.y+h.h);ctx.fill();}}
+    else if(h.type==="mud"){ctx.fillStyle="#8a6f5b";roundRectPath(h.x,h.y+8,h.w,h.h-8,9);ctx.fill();ctx.fillStyle="rgba(255,255,255,.2)";ctx.fillRect(h.x+5,h.y+12,h.w-10,4);}
+    else{ctx.fillStyle="#747d7a";roundRectPath(h.x,h.y,h.w,h.h,7);ctx.fill();ctx.fillStyle="rgba(255,255,255,.28)";ctx.beginPath();ctx.arc(h.x+10,h.y+8,4,0,Math.PI*2);ctx.fill();}
+  }
+  for(const s of game.springs){ctx.fillStyle="#6cc594";roundRectPath(s.x,s.y,s.w,s.h,5);ctx.fill();ctx.fillStyle="#effcf4";ctx.fillRect(s.x+6,s.y+4,s.w-12,4);}
+  ctx.restore();
+}
+function drawDisasterChase(){
+  const d=game.disaster;
+  if(!d||!game.running)return;
+  ctx.save();ctx.translate(-game.camera,0);
+  const x=d.x, base=465, pulse=Math.sin(d.phase*2.1)*5, danger=Math.max(0,Math.min(1,1-(game.player.x-(d.x+d.width))/520));
+  if(x>game.camera+canvas.width && false){ctx.restore();return;}
+  /* red-orange danger haze behind the player */
+  ctx.fillStyle="rgba(214,74,61,"+(0.035+danger*.045)+")";ctx.fillRect(x-40,0,d.width+80,base);
+  if(d.type==="huayco"){
+    const grad=ctx.createLinearGradient(x,240,x,465);grad.addColorStop(0,"#b88666");grad.addColorStop(.45,"#8d624c");grad.addColorStop(1,"#624b3e");ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(x,465);ctx.lineTo(x+8,360);ctx.quadraticCurveTo(x+30,315+pulse,x+65,348);ctx.quadraticCurveTo(x+105,305-pulse,x+145,345);ctx.quadraticCurveTo(x+175,320,x+d.width,350);ctx.lineTo(x+d.width,465);ctx.closePath();ctx.fill();
+    ctx.fillStyle="#6c5042";for(let i=0;i<12;i++){const rx=x+14+(i*31%d.width),ry=365+(i*17%74);ctx.beginPath();ctx.ellipse(rx,ry,7+(i%3)*3,5+(i%2)*4,(i%2?-.35:.35),0,Math.PI*2);ctx.fill();}
+    ctx.strokeStyle="#5b4539";ctx.lineWidth=7;for(let i=0;i<4;i++){const tx=x+24+i*49;ctx.beginPath();ctx.moveTo(tx,390);ctx.lineTo(tx+24,348-(i%2)*17);ctx.stroke();}
+  }else if(d.type==="inundacion"){
+    const grad=ctx.createLinearGradient(x,275,x+d.width,465);grad.addColorStop(0,"rgba(75,157,207,.95)");grad.addColorStop(.55,"rgba(49,127,181,.92)");grad.addColorStop(1,"rgba(33,91,138,.95)");ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(x,465);ctx.lineTo(x,350);ctx.quadraticCurveTo(x+30,325+pulse,x+60,353);ctx.quadraticCurveTo(x+95,305-pulse,x+125,346);ctx.quadraticCurveTo(x+155,315,x+d.width,350);ctx.lineTo(x+d.width,465);ctx.closePath();ctx.fill();
+    ctx.strokeStyle="rgba(230,249,255,.85)";ctx.lineWidth=4;for(let i=0;i<8;i++){const wx=x+8+(i*27%d.width);ctx.beginPath();ctx.moveTo(wx,360+(i%3)*14);ctx.quadraticCurveTo(wx+12,350,wx+24,360+(i%2)*8);ctx.stroke();}
+    ctx.fillStyle="rgba(235,250,255,.9)";for(let i=0;i<18;i++){const bx=x+10+(i*23%d.width),by=320+(i*29%120);ctx.beginPath();ctx.arc(bx,by,2+(i%3),0,Math.PI*2);ctx.fill();}
+  }else{
+    /* seismic shockwave crawling across the ground */
+    ctx.fillStyle="rgba(171,92,66,.24)";ctx.fillRect(x,412,d.width,53);
+    ctx.strokeStyle="#cf805f";ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(x,449);ctx.lineTo(x+38,421);ctx.lineTo(x+74,447);ctx.lineTo(x+109,418);ctx.lineTo(x+150,447);ctx.lineTo(x+d.width,426);ctx.stroke();
+    ctx.strokeStyle="rgba(239,181,113,.88)";ctx.lineWidth=3;for(let i=0;i<7;i++){const cx=x+15+i*29;ctx.beginPath();ctx.moveTo(cx,462);ctx.lineTo(cx+9,438-(i%3)*5);ctx.lineTo(cx+15,462);ctx.stroke();}
+    ctx.fillStyle="rgba(217,194,161,.45)";for(let i=0;i<14;i++){const dx=x+10+(i*17%d.width),dy=390+(i*13%55);ctx.beginPath();ctx.arc(dx,dy,2+(i%3),0,Math.PI*2);ctx.fill();}
+  }
+  /* leading edge */
+  ctx.fillStyle=d.type==="inundacion"?"rgba(230,251,255,.8)":d.type==="huayco"?"rgba(236,206,171,.36)":"rgba(246,215,173,.5)";
+  ctx.fillRect(x+d.width-5,300,5,165);
+  ctx.restore();
+}
+
+function drawSupplies(){
+  ctx.save();ctx.translate(-game.camera,0);
+  for(const item of game.suppliesItems){if(item.taken)continue;const bob=Math.sin(item.pulse)*4;ctx.fillStyle="rgba(255,210,100,.16)";ctx.beginPath();ctx.arc(item.x,item.y+bob,24,0,Math.PI*2);ctx.fill();roundRectPath(item.x-12,item.y-12+bob,24,24,5);ctx.fillStyle="#e4b85a";ctx.fill();ctx.strokeStyle="#a87925";ctx.lineWidth=2;ctx.stroke();ctx.fillStyle="#fff";ctx.fillRect(item.x-3,item.y-8+bob,6,16);ctx.fillRect(item.x-8,item.y-3+bob,16,6);}
+  ctx.restore();
+}
+function drawEnemies(){
+  ctx.save();ctx.translate(-game.camera,0);
+  for(const e of game.enemies){if(!e.alive)continue;const bob=Math.sin(e.anim)*2;if(e.type==="mud"){ctx.fillStyle="#8f6956";roundRectPath(e.x,e.y+bob,e.w,e.h,10);ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(e.x+7,e.y+10+bob,5,7);ctx.fillRect(e.x+23,e.y+10+bob,5,7);ctx.fillStyle="#253129";ctx.fillRect(e.x+9,e.y+12+bob,3,3);ctx.fillRect(e.x+24,e.y+12+bob,3,3);}else{ctx.fillStyle="#667e84";roundRectPath(e.x,e.y+6+bob,e.w,20,8);ctx.fill();ctx.fillStyle="#c4dce2";ctx.fillRect(e.x+7,e.y+11+bob,20,5);ctx.strokeStyle="#53676e";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(e.x-6,e.y+3+bob);ctx.lineTo(e.x+5,e.y+3+bob);ctx.moveTo(e.x+30,e.y+3+bob);ctx.lineTo(e.x+41,e.y+3+bob);ctx.stroke();}}
+  ctx.restore();
+}
+function drawExit(){
+  if(!game.exit)return;ctx.save();ctx.translate(-game.camera,0);const e=game.exit;ctx.fillStyle="rgba(124,216,164,.18)";ctx.beginPath();ctx.arc(e.x+37,e.y+43,58,0,Math.PI*2);ctx.fill();ctx.fillStyle="#6da984";roundRectPath(e.x,e.y+20,e.w,e.h-20,8);ctx.fill();ctx.fillStyle="#447b58";ctx.beginPath();ctx.moveTo(e.x-8,e.y+23);ctx.lineTo(e.x+37,e.y-10);ctx.lineTo(e.x+82,e.y+23);ctx.closePath();ctx.fill();ctx.fillStyle="#effbf4";roundRectPath(e.x+23,e.y+49,26,43,5);ctx.fill();ctx.fillStyle="#fff";ctx.font="900 12px Arial";ctx.fillText("REFUGIO",e.x-1,e.y-17);ctx.restore();
+}
+function drawBoss(){
+  const b=game.boss;if(!b||!b.alive)return;ctx.save();ctx.translate(-game.camera,0);const shake=Math.sin(gameFrame*.2)*2;ctx.fillStyle="rgba(215,66,74,.13)";ctx.beginPath();ctx.arc(b.x+56,b.y+62,88,0,Math.PI*2);ctx.fill();ctx.fillStyle="#6d4d58";roundRectPath(b.x,b.y+shake,b.w,b.h,22);ctx.fill();ctx.fillStyle="#a86170";roundRectPath(b.x+12,b.y+27+shake,b.w-24,55,17);ctx.fill();ctx.fillStyle="#ffe5cf";ctx.beginPath();ctx.arc(b.x+31,b.y+29+shake,9,0,Math.PI*2);ctx.arc(b.x+81,b.y+29+shake,9,0,Math.PI*2);ctx.fill();ctx.fillStyle="#5a252d";ctx.beginPath();ctx.arc(b.x+31,b.y+30+shake,4,0,Math.PI*2);ctx.arc(b.x+81,b.y+30+shake,4,0,Math.PI*2);ctx.fill();ctx.fillStyle="#7a5864";roundRectPath(b.x-24,b.y+41+shake,29,60,12);ctx.fill();roundRectPath(b.x+b.w-4,b.y+41+shake,29,60,12);ctx.fill();ctx.fillStyle="#fff";ctx.font="900 16px Arial";ctx.fillText("GUARDIÁN",b.x+12,b.y-13);ctx.restore();
+}
+function drawShots(){
+  ctx.save();ctx.translate(-game.camera,0);for(const s of game.shots){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.rotation);if(s.enemy){ctx.fillStyle="#d85f67";ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.fill();}else{roundRectPath(-9,-7,18,14,4);ctx.fillStyle="#e4bb62";ctx.fill();ctx.fillStyle="#fff";ctx.fillRect(-2,-5,4,10);ctx.fillRect(-5,-2,10,4);}ctx.restore();}ctx.restore();
+}
+function drawParticles(){ctx.save();ctx.translate(-game.camera,0);for(const p of game.particles){ctx.globalAlpha=Math.max(0,p.life/p.maxLife);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();}ctx.globalAlpha=1;ctx.restore();}
+function drawPlayer(){
+  const p=game.player;if(p.hurt>0&&Math.floor(p.hurt/5)%2===0)return;const c=selected();const walk=Math.sin(p.anim*1.8)*(Math.abs(p.vx)>.4?4:.4);ctx.save();ctx.translate(p.x-game.camera,p.y);ctx.fillStyle="rgba(0,0,0,.12)";ctx.beginPath();ctx.ellipse(17,49,18,5,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#314a55";roundRectPath(7+walk,32,8,17,4);ctx.fill();roundRectPath(19-walk,32,8,17,4);ctx.fill();ctx.fillStyle="#6dbc88";roundRectPath(5,13,25,25,8);ctx.fill();ctx.fillStyle="#d8f2e1";ctx.fillRect(10,18,15,4);ctx.fillStyle=c.id==="exploradora"?"#4e8fad":"#6c9d7c";roundRectPath(0,16+walk,7,19,4);ctx.fill();roundRectPath(27,16-walk,7,19,4);ctx.fill();ctx.fillStyle="#efc49e";ctx.beginPath();ctx.arc(17,9,12,0,Math.PI*2);ctx.fill();ctx.fillStyle="#4f463c";ctx.beginPath();ctx.arc(17,3,11,Math.PI,Math.PI*2);ctx.fill();if(c.id==="rescatista"||c.id==="ingeniera"){ctx.fillStyle=c.id==="rescatista"?"#f39a54":"#e5bb54";roundRectPath(5,-3,24,9,5);ctx.fill();}ctx.fillStyle="#23302a";ctx.fillRect(p.facing===1?20:8,8,3,3);ctx.fillStyle="#47755a";roundRectPath(0,17,5,15,3);ctx.fill();ctx.restore();
+}
+function drawCanvasHUD(){
+  ctx.fillStyle="rgba(255,255,255,.90)";roundRectPath(14,14,318,60,14);ctx.fill();ctx.fillStyle="#345d45";ctx.font="900 15px Arial";ctx.fillText(levelNames[game.level-1],28,36);ctx.fillStyle="#718d7d";ctx.font="700 12px Arial";ctx.fillText("Suministros: "+game.supplies+" · Puntos: "+game.score,28,57);
+  if(game.disaster){ctx.fillStyle=game.disaster.type==="inundacion"?"#317fac":game.disaster.type==="huayco"?"#815640":"#a95f4a";ctx.font="900 11px Arial";ctx.fillText(game.disaster.name+" · ¡CORRE!",210,57);}
+  ctx.fillStyle="rgba(255,255,255,.90)";roundRectPath(canvas.width-195,16,175,48,14);ctx.fill();ctx.fillStyle="#527661";ctx.font="900 12px Arial";ctx.fillText("VIDA",canvas.width-180,34);ctx.fillStyle="#e7f0e9";roundRectPath(canvas.width-133,24,94,10,6);ctx.fill();const hp=Math.max(0,Math.min(1,game.player.health/selected().health));ctx.fillStyle=hp>.35?"#6bc58e":"#e87979";roundRectPath(canvas.width-133,24,94*hp,10,6);ctx.fill();
+}
+function drawOverlay(){
+  if(game.running&&!game.paused&&!game.over&&!game.victory)return;ctx.fillStyle="rgba(27,53,39,.39)";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.textAlign="center";ctx.fillStyle="#fff";
+  if(game.victory){ctx.font="900 40px Arial";ctx.fillText("🏆 ¡VICTORIA!",canvas.width/2,205);ctx.font="700 19px Arial";ctx.fillText("Completaste los 20 niveles",canvas.width/2,245);ctx.font="600 17px Arial";ctx.fillText("y derrotaste al Guardián del Desastre",canvas.width/2,276);ctx.font="900 20px Arial";ctx.fillText("Puntuación: "+game.score,canvas.width/2,321);}
+  else if(game.over){ctx.font="900 38px Arial";ctx.fillText("💥 MISIÓN FALLIDA",canvas.width/2,235);ctx.font="700 18px Arial";ctx.fillText("Pulsa Iniciar para volver a intentarlo",canvas.width/2,274);}
+  else if(game.paused){ctx.font="900 38px Arial";ctx.fillText("PAUSA",canvas.width/2,250);}
+  else{ctx.font="900 37px Arial";ctx.fillText("FEN FORCE",canvas.width/2,222);ctx.font="800 22px Arial";ctx.fillText("MISIÓN REFUGIO",canvas.width/2,257);ctx.font="700 18px Arial";ctx.fillText("Pulsa Iniciar para comenzar",canvas.width/2,274);}
+  ctx.textAlign="left";
+}
+function drawGame(){
+  const theme=levelThemes[game.level-1]||levelThemes[0];ctx.clearRect(0,0,canvas.width,canvas.height);drawBackground(theme);drawPlatforms(theme);drawHazards(theme);drawDisasterChase();drawSupplies();drawExit();drawEnemies();drawBoss();drawShots();drawPlayer();drawParticles();drawCanvasHUD();drawOverlay();
+}
+function gameLoop(){
+  if(!game.running||game.paused){drawGame();return;}gameFrame++;updateGame();drawGame();gameRAF=requestAnimationFrame(gameLoop);
+}
+function resizeGameCanvas(){drawGame();}
+
+window.addEventListener("resize",()=>{if(map) map.invalidateSize(true);resizeGameCanvas();});
+
+/* INITIALIZE GAME */
+buildLevel(1);game.player.health=selected().health;updateGameHUD();drawGame();
+
+
+/* ===== PERSISTENCIA MULTIUSUARIO + DASHBOARD ===== */
+function userStateKey(){return "el_nino_profile_"+safeLower(currentUser||"Invitado").replace(/[^a-z0-9áéíóúñ_-]/gi,"_").slice(0,60);}
+function saveUserProfile(){
+  try{
+    const state={checklist:Array.isArray(checked)?checked:[],quizScore:Number(quizScore)||0,quizIndex:Number(quizIndex)||0,gameLevel:Number(game.level)||1,gameScore:Number(game.score)||0,gameSupplies:Number(game.supplies)||0,selectedCharacter:Number(selectedCharacter)||0,savedAt:new Date().toISOString()};
+    localStorage.setItem(userStateKey(),JSON.stringify(state));
+  }catch(e){}
+  updateHomeDashboard();
+}
+function loadUserProfile(){
+  try{
+    const state=JSON.parse(localStorage.getItem(userStateKey())||"null");
+    if(!state)return false;
+    checked=Array.isArray(state.checklist)?state.checklist:[];renderChecklist();
+    const savedQuizScore=Number(state.quizScore)||0;const savedQuizIndex=Number(state.quizIndex)||0;
+    selectedCharacter=Math.max(0,Math.min(characters.length-1,Number(state.selectedCharacter)||0));renderCharacterCards();
+    game.level=Math.max(1,Math.min(20,Number(state.gameLevel)||1));game.score=Math.max(0,Number(state.gameScore)||0);game.supplies=Math.max(0,Number(state.gameSupplies)||0);buildLevel(game.level);game.running=false;game.paused=false;updateGameHUD();drawGame();
+    startQuiz();
+    quizScore=savedQuizScore;quizIndex=Math.max(0,Math.min(questions.length-1,savedQuizIndex));
+    if($('quizCounter'))$('quizCounter').textContent="Pregunta "+Math.min(quizIndex+1,questions.length);
+    updateHomeDashboard();return true;
+  }catch(e){return false;}
+}
+function updateHomeDashboard(){
+  const total=Array.isArray(checklist)?checklist.length:0;const done=Array.isArray(checked)?checked.filter(Boolean).length:0;const pct=total?Math.round(done/total*100):0;
+  if($("homeProgress"))$("homeProgress").style.width=pct+"%";
+  if($("homeProgressText"))$("homeProgressText").textContent=pct+"% completado · "+done+" de "+total;
+  if($("dashReady"))$("dashReady").textContent=pct+"%";
+  if($("dashReadyBar"))$("dashReadyBar").style.width=pct+"%";
+  if($("homeQuizText"))$("homeQuizText").textContent=quizScore>0?"Quiz: "+quizScore+" punto"+(quizScore===1?"":"s"):"Quiz: todavía no realizado";
+  if($("dashQuiz"))$("dashQuiz").textContent=quizScore>0?String(quizScore)+" pts":"Sin intento";
+  if($("homeGameText"))$("homeGameText").textContent="Juego: nivel "+game.level+"/20 · "+game.score+" puntos";
+}
+
+/* Override demo login/logout so each user keeps a separate local profile. */
+function login(){
+  const user=safeString($("loginUser")?.value).trim(),pass=safeString($("loginPass")?.value).trim();
+  if(!user||!pass){toast("Escribe usuario y contraseña.");return;}
+  currentUser=user;$("userBadge").textContent=user;$("loginScreen").classList.add("hidden");
+  const restored=loadUserProfile();toast(restored?"Progreso restaurado para "+user:"Bienvenido a Fen Force");updateHomeDashboard();
+}
+function logout(){saveUserProfile();currentUser="Invitado";$("userBadge").textContent="Invitado";game.running=false;game.paused=false;$("loginScreen").classList.remove("hidden");toast("Sesión cerrada. Tu progreso quedó guardado.");}
+
+/* Safer navigation: initialize expensive areas only when opened. */
+const __enShowPage=showPage;
+showPage=function(id,button){__enShowPage(id,button);if(id==="mapa")setTimeout(()=>map&&renderEducationalRiskLayer(),250);if(id==="home")updateHomeDashboard();if(id==="clima")loadWeather();};
+
+/* Visual weather effects for Misión Refugio without external assets. */
+function drawWeatherEffects(theme){
+  if(!ctx||!game.running)return;
+  const heavy=game.level>=2;const storm=game.level>=11;ctx.save();
+  if(heavy){ctx.strokeStyle="rgba(225,245,250,.33)";ctx.lineWidth=1.4;for(let i=0;i<70;i++){const x=(i*71+gameFrame*7)%canvas.width,y=(i*37+gameFrame*10)%canvas.height;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-8,y+20);ctx.stroke();}}
+  if(storm){ctx.fillStyle="rgba(38,63,72,.08)";ctx.fillRect(0,0,canvas.width,canvas.height);const flash=Math.max(0,Math.sin(gameFrame*.12))*.08;ctx.fillStyle="rgba(255,255,240,"+flash+")";ctx.fillRect(0,0,canvas.width,canvas.height);}
+  if(game.level>=3&&game.level<=9){ctx.fillStyle="rgba(100,171,196,.07)";ctx.fillRect(0,390,canvas.width,150);}
+  if(game.disaster&&game.running){
+    const danger=disasterDistancePercent()/100;
+    if(danger>.55){ctx.fillStyle="rgba(220,75,68,"+((danger-.55)*.18)+")";ctx.fillRect(0,0,canvas.width,canvas.height);}
+  }
+  ctx.restore();
+}
+const __enDrawGame=drawGame;
+drawGame=function(){__enDrawGame();drawWeatherEffects(levelThemes[game.level-1]||levelThemes[0]);};
+
+/* Autosave without hammering localStorage every animation frame. */
+window.__enProfileTimer=setInterval(saveUserProfile,5000);
+window.addEventListener("beforeunload",saveUserProfile);
+
+/* Recalculate dashboard state after all original initialization is complete. */
+updateHomeDashboard();
+
+/* SAFETY NETS: avoid accidental undefined property calls in older browsers/host editors */
+window.addEventListener("error", event=>{
+  const msg=safeLower(event?.message);
+  if(msg.includes("tolowercase")){console.warn("EL NIÑO: error toLowerCase interceptado; se usa conversión segura.");}
+});
+</script>
+<script>
+/* ============================================================
+   FEN FORCE 2.0 — ENHANCED SYSTEMS (ADDITIVE / NON-DESTRUCTIVE)
+   ============================================================ */
+const FF_ACHIEVEMENTS=[
+  {id:"welcome",icon:"👋",title:"Primer paso",desc:"Iniciar sesión por primera vez."},
+  {id:"learner",icon:"📚",title:"Aprendiz",desc:"Completar un cuestionario."},
+  {id:"prepared",icon:"🎒",title:"Preparado",desc:"Completar la mochila al 100%."},
+  {id:"survivor",icon:"🎮",title:"Superviviente",desc:"Superar 5 niveles."},
+  {id:"runner",icon:"🏃",title:"Corredor",desc:"Superar 10 niveles."},
+  {id:"elite",icon:"🔥",title:"Élite",desc:"Llegar al nivel 20."},
+  {id:"trainer",icon:"🚨",title:"Entrenador",desc:"Completar 3 simulaciones."},
+  {id:"champion",icon:"🏆",title:"Campeón",desc:"Completar los 20 niveles."}
+];
+let ffState={xp:0,simCompleted:0,achievements:[],combo:1,lastSupplyAt:0,gameBestLevel:1};
+let ffSimIndex=0,ffSimScore=0;
+const FF_SIMULATIONS=[
+  {title:"Situación 1",q:"Una inundación está cubriendo la calle y no conoces su profundidad. ¿Qué haces?",opts:["Cruzar rápido", "Buscar una zona segura y evitar la corriente", "Esperar en medio de la calle"],correct:1,why:"No atravieses corrientes de agua cuya fuerza o profundidad desconozcas."},
+  {title:"Situación 2",q:"Empieza un sismo fuerte mientras estás dentro de un edificio. ¿Qué haces?",opts:["Correr a las ventanas", "Agacharte, cubrirte y sujetarte", "Usar el ascensor"],correct:1,why:"Durante el movimiento, protégete de objetos que puedan caer y sigue el plan establecido."},
+  {title:"Situación 3",q:"Escuchas que se aproxima un huaico. ¿Dónde debes dirigirte?",opts:["Hacia una quebrada", "A una zona segura siguiendo la evacuación", "A mirar el cauce"],correct:1,why:"Aléjate de quebradas y cauces y sigue las rutas de evacuación indicadas."}
+];
+function ffUserKey(){return "fen_force_2_state_"+safeLower(currentUser||"Invitado").replace(/[^a-z0-9áéíóúñ_-]/gi,"_").slice(0,60);}
+function ffLoadState(){try{const x=JSON.parse(localStorage.getItem(ffUserKey())||"null");if(x&&typeof x==="object"){ffState={...ffState,...x};if(!Array.isArray(ffState.achievements))ffState.achievements=[];ffState.xp=Math.max(0,Number(ffState.xp)||0);ffState.simCompleted=Math.max(0,Number(ffState.simCompleted)||0);}}catch(e){} updateFFUI();}
+function ffSaveState(){try{localStorage.setItem(ffUserKey(),JSON.stringify(ffState));}catch(e){} updateFFUI();}
+function ffLevelFromXP(xp){return Math.floor(Math.max(0,Number(xp)||0)/100)+1;}
+function ffLevelProgress(xp){const n=Math.max(0,Number(xp)||0);return n%100;}
+function ffUnlock(id){if(ffState.achievements.includes(id))return;const found=FF_ACHIEVEMENTS.find(a=>a.id===id);if(!found)return;ffState.achievements.push(id);ffState.xp+=60;toast("🏆 Logro desbloqueado: "+found.title);ffSaveState();}
+function ffAddXP(amount,reason=""){const n=Math.max(0,Math.round(Number(amount)||0));if(!n)return;ffState.xp+=n;if(reason)toast("+"+n+" XP · "+reason);ffSaveState();}
+function ffPlayFeedback(kind="ok"){if($('ffSoundToggle')?.checked&&window.AudioContext){try{const A=window.AudioContext||window.webkitAudioContext;const a=new A(),o=a.createOscillator(),g=a.createGain();o.frequency.value=kind==="bad"?180:kind==="win"?720:420;g.gain.value=.035;o.connect(g);g.connect(a.destination);o.start();o.stop(a.currentTime+.08);setTimeout(()=>a.close?.(),120);}catch(e){}}if($('ffVibrateToggle')?.checked&&navigator.vibrate)navigator.vibrate(kind==="bad"?[40,40,40]:25);}
+function ffRenderBadges(){const host=$("ffBadgeGrid");if(!host)return;host.innerHTML=FF_ACHIEVEMENTS.map(a=>{const on=ffState.achievements.includes(a.id);return `<div class="ff-badge-card ${on?"":"locked"}"><div class="ff-badge-icon">${a.icon}</div><div class="ff-badge-title">${a.title} ${on?"✓":"🔒"}</div><div class="ff-badge-desc">${a.desc}</div></div>`}).join("");}
+function ffPreparedPct(){const total=Array.isArray(checklist)?checklist.length:0;const done=Array.isArray(checked)?checked.filter(Boolean).length:0;return total?Math.round(done/total*100):0;}
+function ffGlobalPct(){const prep=ffPreparedPct()/100,quiz=Math.min(1,(Number(quizScore)||0)/Math.max(1,questions.length)),gamePct=Math.min(1,(Number(game.level)||1)/20),sim=Math.min(1,(Number(ffState.simCompleted)||0)/3);return Math.round(((prep+quiz+gamePct+sim)/4)*100);}
+function updateFFUI(){
+  const lvl=ffLevelFromXP(ffState.xp),prog=ffLevelProgress(ffState.xp),prep=ffPreparedPct(),global=ffGlobalPct();
+  if($("ffHomeXP"))$("ffHomeXP").textContent=ffState.xp+" XP";if($("ffHomeNext"))$("ffHomeNext").textContent=(100-prog)+" XP para el siguiente nivel";if($("ffHomeLevel"))$("ffHomeLevel").textContent="Nivel "+lvl;if($("ffHomeAchievements"))$("ffHomeAchievements").textContent=ffState.achievements.length+"/"+FF_ACHIEVEMENTS.length;if($("ffHomeGameLevel"))$("ffHomeGameLevel").textContent=game.level+"/20";if($("ffHomeGamePoints"))$("ffHomeGamePoints").textContent=game.score+" puntos";if($("ffHomeReady2"))$("ffHomeReady2").textContent=prep+"%";if($("ffGlobalProgressText"))$("ffGlobalProgressText").textContent=global+"%";if($("ffGlobalProgressBar"))$("ffGlobalProgressBar").style.width=global+"%";
+  if($("ffProfileName"))$("ffProfileName").textContent=currentUser||"Invitado";if($("ffProfileLevel"))$("ffProfileLevel").textContent="Nivel "+lvl;if($("ffXPBig"))$("ffXPBig").textContent=ffState.xp+" XP";if($("ffXPInfo"))$("ffXPInfo").textContent=prog+" / 100 XP";if($("ffLevelBadge"))$("ffLevelBadge").textContent="Nivel "+lvl;if($("ffXPBar"))$("ffXPBar").style.width=prog+"%";if($("ffProfileGame"))$("ffProfileGame").textContent=game.level+"/20";if($("ffProfileQuiz"))$("ffProfileQuiz").textContent=(quizScore||0)+" pts";if($("ffProfileBag"))$("ffProfileBag").textContent=prep+"%";if($("ffProfileSim"))$("ffProfileSim").textContent=ffState.simCompleted;if($("ffAchievementCount"))$("ffAchievementCount").textContent=ffState.achievements.length+"/"+FF_ACHIEVEMENTS.length;if($("ffSettingsUser"))$("ffSettingsUser").textContent=currentUser||"Invitado";
+  if($("gXP"))$("gXP").textContent=ffState.xp;if($("gCombo"))$("gCombo").textContent="x"+Math.max(1,ffState.combo);if($("gDistance"))$("gDistance").textContent=Math.round((game.player.x/Math.max(1,game.worldWidth))*100)+"%";if($("gAchievements"))$("gAchievements").textContent=ffState.achievements.length;if($("ffDisasterBar2"))$("ffDisasterBar2").style.width=disasterDistancePercent()+"%";
+  ffRenderBadges();
+}
+function startEmergencySim(){ffSimIndex=0;ffSimScore=0;renderEmergencySim();showPage("educacion");}
+function renderEmergencySim(){const t=FF_SIMULATIONS[ffSimIndex];if(!t)return;$("ffSimTitle").textContent=t.title+" · "+(ffSimIndex+1)+"/"+FF_SIMULATIONS.length;$("ffSimQuestion").textContent=t.q;$("ffSimResult").textContent="Elige una opción.";$("ffSimOptions").innerHTML=t.opts.map((o,i)=>`<button class="ff-sim-option" onclick="answerEmergencySim(${i})">${String.fromCharCode(65+i)}. ${o}</button>`).join("");}
+function answerEmergencySim(i){const t=FF_SIMULATIONS[ffSimIndex];if(!t)return;const ok=i===t.correct;ffSimScore+=ok?1:0;ffPlayFeedback(ok?"ok":"bad");$("ffSimResult").textContent=(ok?"✅ Correcto. ":"❌ No es la opción más segura. ")+t.why;document.querySelectorAll(".ff-sim-option").forEach(b=>b.disabled=true);setTimeout(()=>{ffSimIndex++;if(ffSimIndex<FF_SIMULATIONS.length)renderEmergencySim();else{ffState.simCompleted++;ffAddXP(40+(ffSimScore*20),"Simulador completado");if(ffState.simCompleted>=3)ffUnlock("trainer");toast("🚨 Simulador: "+ffSimScore+"/"+FF_SIMULATIONS.length);renderEmergencySimEnd();}},450);}
+function renderEmergencySimEnd(){const host=$("ffSimOptions");if(host)host.innerHTML='<button class="ff-sim-option" onclick="startEmergencySim()">🔁 Repetir simulador</button>';if($("ffSimTitle"))$("ffSimTitle").textContent="Entrenamiento completado";if($("ffSimQuestion"))$("ffSimQuestion").textContent="Resultado: "+ffSimScore+"/"+FF_SIMULATIONS.length;if($("ffSimResult"))$("ffSimResult").textContent="Buen trabajo. Practica otra vez para mejorar.";updateFFUI();}
+function toggleDarkMode(on){document.body.classList.toggle("ff-dark",!!on);try{localStorage.setItem("fen_force_dark",on?"1":"0");}catch(e){}saveSettings();}
+function saveSettings(){try{const x={dark:$("ffDarkToggle")?.checked,sound:$("ffSoundToggle")?.checked,fx:$("ffFxToggle")?.checked,vibrate:$("ffVibrateToggle")?.checked};localStorage.setItem("fen_force_settings",JSON.stringify(x));}catch(e){}}
+function loadSettings(){try{const x=JSON.parse(localStorage.getItem("fen_force_settings")||"null");if(x){if($("ffDarkToggle"))$("ffDarkToggle").checked=!!x.dark;if($("ffSoundToggle"))$("ffSoundToggle").checked=x.sound!==false;if($("ffFxToggle"))$("ffFxToggle").checked=x.fx!==false;if($("ffVibrateToggle"))$("ffVibrateToggle").checked=!!x.vibrate;document.body.classList.toggle("ff-dark",!!x.dark);}}catch(e){}}
+function resetEnhancedProgress(){if(!confirm("¿Reiniciar el progreso local de Fen Force para este usuario?"))return;ffState={xp:0,simCompleted:0,achievements:[],combo:1,lastSupplyAt:0,gameBestLevel:1};try{localStorage.removeItem(ffUserKey());}catch(e){}toast("Progreso reiniciado.");updateFFUI();}
+
+/* Non-destructive wrappers around the existing systems. */
+const FF_originalLogin=login,FF_originalLogout=logout,FF_originalCompleteLevel=completeLevel,FF_originalVictory=completeVictory,FF_originalToggleCheck=toggleCheck,FF_originalAnswerQuiz=answerQuiz,FF_originalUpdateGame=updateGame,FF_originalDamagePlayer=damagePlayer;
+login=function(){FF_originalLogin();if(currentUser&&currentUser!=="Invitado"){ffLoadState();ffUnlock("welcome");loadSettings();}updateFFUI();};
+logout=function(){ffSaveState();FF_originalLogout();updateFFUI();};
+completeLevel=function(){const before=game.level;FF_originalCompleteLevel();if(game.level===before)ffAddXP(35,"Nivel superado");if(game.level>=5)ffUnlock("survivor");if(game.level>=10)ffUnlock("runner");if(game.level>=20)ffUnlock("elite");ffState.gameBestLevel=Math.max(ffState.gameBestLevel,game.level);updateFFUI();};
+completeVictory=function(){FF_originalVictory();ffUnlock("champion");ffAddXP(500,"Victoria final");updateFFUI();};
+toggleCheck=function(index,active){FF_originalToggleCheck(index,active);if(ffPreparedPct()===100)ffUnlock("prepared");ffSaveState();};
+answerQuiz=function(index,button){const prev=quizScore;FF_originalAnswerQuiz(index,button);if(quizScore>prev)ffAddXP(10,"Respuesta correcta");if(quizIndex>=questions.length-1)ffUnlock("learner");updateFFUI();};
+damagePlayer=function(amount){const before=game.player.health;FF_originalDamagePlayer(amount);if(game.player.health<before){document.body.classList.add("ff-shake");setTimeout(()=>document.body.classList.remove("ff-shake"),280);ffPlayFeedback("bad");updateFFUI();}};
+
+/* Enhanced game feedback and lightweight effects; original mechanics remain intact. */
+function ffAfterGameTick(){
+  if(game.running&&!game.paused&&!game.over&&!game.victory){
+    const now=Date.now();if(now-(ffState.lastSupplyAt||0)>5500&&ffState.combo!==1){ffState.combo=1;updateFFUI();}
+    const d=disasterDistancePercent();if($("ffDisasterBar2"))$("ffDisasterBar2").style.width=d+"%";if($("ffGameObjective"))$("ffGameObjective").textContent=game.level===20?(game.boss?.alive?"OBJETIVO: derrota al Guardián":"OBJETIVO: entra al refugio"):"OBJETIVO: llega al refugio";if($("ffGameTip"))$("ffGameTip").textContent=game.disaster?(game.disaster.type==="huayco"?"⛰️ El huaico avanza detrás: usa saltos y mantén la velocidad.":game.disaster.type==="inundacion"?"🌊 La inundación te alcanza más rápido cuando te detienes.":"💥 La onda sísmica recorre el suelo: evita quedarte atrás."):"Recoge suministros y encuentra la salida.";
+    if(d>72){if($("ffDisasterBar2"))$("ffDisasterBar2").parentElement.classList.add("ff-hot");}else if($("ffDisasterBar2"))$("ffDisasterBar2").parentElement.classList.remove("ff-hot");
+    updateFFUI();
+  }
+}
+updateGame=function(){FF_originalUpdateGame();ffAfterGameTick();};
+
+/* Supply collection combo: infer from supply count delta without changing original collection logic. */
+let ffLastSupplies=game.supplies;
+const FF_originalDrawSupplies=drawSupplies;
+drawSupplies=function(){FF_originalDrawSupplies();};
+setInterval(()=>{if(game.supplies>ffLastSupplies){const gained=game.supplies-ffLastSupplies;ffState.combo=Math.min(5,ffState.combo+gained);ffState.lastSupplyAt=Date.now();ffAddXP(5*gained,"Suministro recogido");ffLastSupplies=game.supplies;}else if(game.supplies<ffLastSupplies){ffLastSupplies=game.supplies;}updateFFUI();},250);
+
+/* Keep original profile save and enhanced state synchronized. */
+const FF_originalSaveProfile=saveUserProfile,FF_originalLoadProfile=loadUserProfile;
+saveUserProfile=function(){FF_originalSaveProfile();ffSaveState();};
+loadUserProfile=function(){const ok=FF_originalLoadProfile();ffLoadState();return ok;};
+
+/* Restore enhanced settings on first load even before login. */
+loadSettings();updateFFUI();
+
+</script>
+
+<script>
+/* ============================================================
+   FEN FORCE 3.0 — RESILIENCE + SETTINGS + UX PATCH
+   Mantiene las funciones anteriores y corrige efectos secundarios.
+   ============================================================ */
+(function(){
+  'use strict';
+  const byId = id => document.getElementById(id);
+
+  window.ffSettings = window.ffSettings || {dark:false,sound:true,fx:true,vibrate:false,quality:'ultra'};
+  function readSettings(){
+    try{
+      const saved=JSON.parse(localStorage.getItem('fen_force_settings')||'null');
+      if(saved && typeof saved==='object') window.ffSettings={...window.ffSettings,...saved};
+    }catch(e){}
+    const s=window.ffSettings;
+    if(byId('ffDarkToggle')) byId('ffDarkToggle').checked=!!s.dark;
+    if(byId('ffSoundToggle')) byId('ffSoundToggle').checked=s.sound!==false;
+    if(byId('ffFxToggle')) byId('ffFxToggle').checked=s.fx!==false;
+    if(byId('ffVibrateToggle')) byId('ffVibrateToggle').checked=!!s.vibrate;
+    if(byId('ffQualitySelect')) byId('ffQualitySelect').value=['ultra','balanced','battery'].includes(s.quality)?s.quality:'ultra';
+    document.body.classList.toggle('ff-quality-ultra',s.quality==='ultra');
+    document.body.classList.toggle('ff-quality-balanced',s.quality==='balanced');
+    document.body.classList.toggle('ff-quality-battery',s.quality==='battery');
+    document.body.classList.toggle('ff-dark',!!s.dark);
+  }
+
+  window.saveSettings=function(){
+    const s=window.ffSettings;
+    s.dark=!!byId('ffDarkToggle')?.checked;
+    s.sound=byId('ffSoundToggle') ? !!byId('ffSoundToggle').checked : s.sound!==false;
+    s.fx=byId('ffFxToggle') ? !!byId('ffFxToggle').checked : s.fx!==false;
+    s.vibrate=byId('ffVibrateToggle') ? !!byId('ffVibrateToggle').checked : !!s.vibrate;
+    s.quality=byId('ffQualitySelect')?.value || s.quality || 'ultra';
+    try{localStorage.setItem('fen_force_settings',JSON.stringify(s));}catch(e){}
+    document.body.classList.toggle('ff-dark',s.dark);
+    document.body.classList.toggle('ff-quality-ultra',s.quality==='ultra');
+    document.body.classList.toggle('ff-quality-balanced',s.quality==='balanced');
+    document.body.classList.toggle('ff-quality-battery',s.quality==='battery');
+  };
+
+  window.applyQuality=function(value){
+    if(!['ultra','balanced','battery'].includes(value)) value='ultra';
+    window.ffSettings.quality=value;
+    window.saveSettings();
+    const labels={ultra:'Ultra activado: efectos completos.',balanced:'Equilibrado activado: buen detalle y fluidez.',battery:'Ahorro activado: menos efectos para mejorar fluidez.'};
+    if(typeof toast==='function') toast('🎨 '+labels[value]);
+    if(typeof drawGame==='function') drawGame();
+  };
+
+  window.resetFFSettings=function(){
+    window.ffSettings={dark:false,sound:true,fx:true,vibrate:false,quality:'ultra'};
+    try{localStorage.setItem('fen_force_settings',JSON.stringify(window.ffSettings));}catch(e){}
+    readSettings();
+    if(typeof toast==='function') toast('⚙️ Ajustes restablecidos.');
+  };
+
+  /* Upgrade feedback audio without creating a new AudioContext on every event. */
+  let audioCtx=null;
+  window.ffPlayFeedback=function(kind='ok'){
+    const sound=byId('ffSoundToggle');
+    if(sound?.checked && (window.AudioContext||window.webkitAudioContext)){
+      try{
+        const A=window.AudioContext||window.webkitAudioContext;
+        if(!audioCtx) audioCtx=new A();
+        if(audioCtx.state==='suspended') audioCtx.resume().catch(()=>{});
+        const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+        const freq=kind==='bad'?180:(kind==='win'?720:420);
+        o.type=kind==='bad'?'sawtooth':'sine';o.frequency.setValueAtTime(freq,audioCtx.currentTime);
+        g.gain.setValueAtTime(.025,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+.09);
+        o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+.09);
+      }catch(e){}
+    }
+    if(byId('ffVibrateToggle')?.checked && navigator.vibrate){
+      try{navigator.vibrate(kind==='bad'?[45,35,45]:(kind==='win'?[30,25,60]:22));}catch(e){}
+    }
+  };
+
+
+
+  /* Visual-effects toggle: all particle spawns pass through this gate. */
+  if(typeof window.spawnParticles==='function' && !window.__ffSpawnWrapped){
+    const originalSpawn=window.spawnParticles;
+    window.spawnParticles=function(x,y,count,color){
+      const enabled=byId('ffFxToggle')?.checked!==false;
+      if(!enabled)return;
+      const q=window.ffSettings?.quality||'ultra';
+      const factor=q==='battery'?0.45:(q==='balanced'?0.72:1);
+      return originalSpawn(x,y,Math.max(1,Math.round((Number(count)||0)*factor)),color);
+    };
+    window.__ffSpawnWrapped=true;
+  }
+
+  /* Visual-effects toggle: skip heavy weather overlays when disabled. */
+  if(typeof window.drawWeatherEffects==='function' && !window.__ffWeatherWrapped){
+    const originalWeather=window.drawWeatherEffects;
+    window.drawWeatherEffects=function(theme){
+      if(byId('ffFxToggle')?.checked===false)return;
+      if(window.ffSettings?.quality==='battery' && game?.level>=11 && gameFrame%2)return;
+      return originalWeather(theme);
+    };
+    window.__ffWeatherWrapped=true;
+  }
+
+  /* Replace per-frame DOM work with a throttled HUD refresh. */
+  let hudClock=0,lastLevel=game?.level||1,lastScore=game?.score||0;
+  if(typeof window.updateGame==='function' && !window.__ffUpdateWrapped){
+    const originalUpdate=window.updateGame;
+    window.updateGame=function(){
+      originalUpdate();
+      const now=performance.now();
+      if(now-hudClock>180){
+        hudClock=now;
+        if(typeof updateFFUI==='function') updateFFUI();
+      }
+      if(game?.level!==lastLevel){
+        lastLevel=game.level;
+        if(typeof updateFFUI==='function') updateFFUI();
+      }
+      if(game?.score!==lastScore){lastScore=game.score;}
+    };
+    window.__ffUpdateWrapped=true;
+  }
+
+  /* Fix asynchronous level achievements: the original level increment occurs after a short delay. */
+  let observedLevel=game?.level||1, observedVictory=!!game?.victory;
+  setInterval(()=>{
+    if(typeof game==='undefined')return;
+    if(game.level!==observedLevel){
+      observedLevel=game.level;
+      if(typeof ffState!=='undefined'){
+        if(game.level>=5)ffUnlock('survivor');
+        if(game.level>=10)ffUnlock('runner');
+        if(game.level>=20)ffUnlock('elite');
+        ffState.gameBestLevel=Math.max(Number(ffState.gameBestLevel)||1,game.level);
+        if(typeof ffSaveState==='function')ffSaveState();
+      }
+      if(typeof updateFFUI==='function')updateFFUI();
+    }
+    if(game.victory && !observedVictory){
+      observedVictory=true;
+      if(typeof ffState!=='undefined'){ffUnlock('champion');if(typeof ffSaveState==='function')ffSaveState();}
+    }
+    if(!game.victory)observedVictory=false;
+  },350);
+
+  /* Reset EVERYTHING for the current demo user, not only the added XP layer. */
+  window.resetEnhancedProgress=function(){
+    const ok=window.confirm('¿Reiniciar TODO el progreso local de Fen Force para este usuario?');
+    if(!ok)return;
+    try{
+      localStorage.removeItem(typeof userStateKey==='function'?userStateKey():'');
+      localStorage.removeItem(typeof ffUserKey==='function'?ffUserKey():'');
+    }catch(e){}
+    if(typeof checklist!=='undefined' && Array.isArray(checklist)){checked=checklist.map(()=>false);} else if(typeof checked!=='undefined'){checked=[];}
+    if(typeof quizScore!=='undefined')quizScore=0;
+    if(typeof quizIndex!=='undefined')quizIndex=0;
+    if(typeof selectedCharacter!=='undefined')selectedCharacter=0;
+    if(typeof ffState!=='undefined')ffState={xp:0,simCompleted:0,achievements:[],combo:1,lastSupplyAt:0,gameBestLevel:1};
+    if(typeof renderChecklist==='function')renderChecklist();
+    if(typeof renderCharacterCards==='function')renderCharacterCards();
+    if(typeof startQuiz==='function')startQuiz();
+    if(typeof game!=='undefined'){
+      game.level=1;game.score=0;game.supplies=0;game.running=false;game.paused=false;game.over=false;game.victory=false;
+      if(typeof buildLevel==='function')buildLevel(1);
+      if(typeof updateGameHUD==='function')updateGameHUD();
+    }
+    if(typeof updateHomeDashboard==='function')updateHomeDashboard();
+    if(typeof updateFFUI==='function')updateFFUI();
+    if(typeof toast==='function')toast('♻️ Progreso reiniciado completamente.');
+  };
+
+  /* Better mobile hold controls. */
+  function bindHoldControls(){
+    document.querySelectorAll('.game-touch button, .game-controls button').forEach(btn=>{
+      if(btn.__ffHoldBound)return;
+      const onclick=btn.getAttribute('onclick')||'';
+      const m=onclick.match(/gameAction\('([^']+)'\)/);
+      if(!m)return;
+      const action=m[1];let timer=null;
+      const stop=()=>{if(timer){clearInterval(timer);timer=null;}};
+      btn.addEventListener('pointerdown',ev=>{
+        if(!game?.running||game?.paused)return;
+        ev.preventDefault();
+        ffPlayFeedback('ok');
+        gameAction(action);
+        timer=setInterval(()=>gameAction(action),90);
+      });
+      ['pointerup','pointercancel','pointerleave'].forEach(type=>btn.addEventListener(type,stop));
+      btn.__ffHoldBound=true;
+    });
+  }
+  bindHoldControls();
+
+  /* Quality-friendly page transitions. */
+  const style=document.createElement('style');
+  style.textContent=`
+    .ff-command-center{display:grid;grid-template-columns:1.6fr .8fr;gap:14px;margin:18px 0;padding:18px;border:1px solid #cfe8d8;border-radius:22px;background:linear-gradient(135deg,#eefaf3,#f8fcfa 58%,#eef7fb);box-shadow:0 16px 38px rgba(41,89,59,.08)}
+    .ff-command-main,.ff-command-side{padding:4px}
+    .ff-command-progress{height:12px;background:#e8f0eb;border-radius:99px;overflow:hidden;margin-top:12px}.ff-command-progress>div{height:100%;width:0;background:linear-gradient(90deg,#82d6a7,#4caa76);transition:.3s}
+    .ff-command-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.ff-command-side{display:grid;gap:7px;padding:12px;border-radius:17px;background:rgba(255,255,255,.72);border:1px solid #dcebe2}.ff-command-level{display:flex;justify-content:space-between;align-items:end;padding-bottom:8px;border-bottom:1px solid #e2eee7}.ff-command-level strong{font-size:34px;color:#286b46}.ff-command-stat{display:flex;justify-content:space-between;gap:10px;font-size:12px}.ff-command-stat b{color:#245d3e}.ff-quality{width:auto;min-width:145px;margin:0}.ff-quality-ultra .ff-command-center{box-shadow:0 20px 50px rgba(41,89,59,.10),0 0 30px rgba(126,213,164,.12)}.ff-quality-battery *,body.ff-quality-battery *{animation-duration:.01ms!important;scroll-behavior:auto!important}
+    @media(max-width:760px){.ff-command-center{grid-template-columns:1fr}.ff-command-actions .btn{flex:1;min-width:140px}.ff-quality{width:100%}}
+    body.ff-dark .ff-command-center{background:linear-gradient(135deg,#1b3325,#162820);border-color:#294338}.body.ff-dark .ff-command-side{background:#142019}
+  `;
+  document.head.appendChild(style);
+
+  readSettings();
+  setTimeout(()=>{readSettings();bindHoldControls();if(typeof updateFFUI==='function')updateFFUI();},100);
+})();
+</script>
+</body>
+</html>
